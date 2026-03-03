@@ -18,7 +18,8 @@ module.exports = async (req, res) => {
     res.status(200).json(result.rows);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: error.message });
+res.status(500).send("ERROR BACKEND: " + error.message);
   }
 };
+
 
