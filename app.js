@@ -1,28 +1,24 @@
 async function cargarProductos() {
-  const username = document.getElementById('username').value;
-  if (!username) return alert('Ingrese un usuario');
-
   try {
-    const response = await fetch(`/api/productos?username=${encodeURIComponent(username)}`);
+    const response = await fetch("/api/productos");
     const productos = await response.json();
 
-    const tbody = document.querySelector('#productosTable tbody');
-    tbody.innerHTML = '';
+    const lista = document.getElementById("lista");
+    lista.innerHTML = "";
+
+    if (!Array.isArray(productos)) {
+      lista.innerHTML = "<li>Error cargando productos</li>";
+      return;
+    }
 
     productos.forEach(p => {
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td>${p.idProductos}</td>
-        <td>${p.nameProductos}</td>
-        <td>${p.descriptionProductos}</td>
-        <td>${p.codigoBarraProductos}</td>
-        <td>${p.priceProductos}</td>
-        <td>${p.nameEmpresasPaises}</td>
-        <td>${p.namePaisLista}</td>
-      `;
-      tbody.appendChild(tr);
+      const li = document.createElement("li");
+      li.textContent = `${p.id} - ${p.nombre} - $${p.precio}`;
+      lista.appendChild(li);
     });
-  } catch (err) {
-    alert('Error cargando productos: ' + err.message);
+
+  } catch (error) {
+    console.error(error);
+    alert("Error al conectar con el servidor");
   }
 }
