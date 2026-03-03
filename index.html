@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Productos — PostgreSQL</title>
+  <style>
+    /* ── Reset & base ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #0f172a;
+      color: #e2e8f0;
+      min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    header {
+      background: linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%);
+      border-bottom: 1px solid #1e40af44;
+      padding: 1.5rem 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    header svg { flex-shrink: 0; }
+    header h1 { font-size: 1.5rem; font-weight: 700; color: #60a5fa; }
+    header p  { font-size: 0.85rem; color: #94a3b8; margin-top: 2px; }
+
+    /* ── Toolbar ── */
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      align-items: center;
+      padding: 1.25rem 2rem;
+      background: #0f172a;
+      border-bottom: 1px solid #1e293b;
+    }
+    .toolbar input, .toolbar select {
+      background: #1e293b;
+      border: 1px solid #334155;
+      color: #e2e8f0;
+      border-radius: 8px;
+      padding: 0.5rem 0.9rem;
+      font-size: 0.9rem;
+      outline: none;
+      transition: border-color .2s;
+    }
+    .toolbar input { width: 260px; }
+    .toolbar input::placeholder { color: #64748b; }
+    .toolbar input:focus, .toolbar select:focus { border-color: #3b82f6; }
+    .toolbar select option { background: #1e293b; }
+
+    .btn-refresh {
+      margin-left: auto;
+      background: #2563eb;
+      border: none;
+      color: #fff;
+      border-radius: 8px;
+      padding: 0.5rem 1.1rem;
+      font-size: 0.9rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: background .2s;
+    }
+    .btn-refresh:hover { background: #1d4ed8; }
+
+    /* ── Stats bar ── */
+    .stats {
+      display: flex;
+      gap: 1.5rem;
+      padding: 0.8rem 2rem;
+      font-size: 0.82rem;
+      color: #64748b;
+      border-bottom: 1px solid #1e293b;
+    }
+    .stats span b { color: #94a3b8; }
+
+    /* ── Grid ── */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1.25rem;
+      padding: 1.75rem 2rem;
+    }
+
+    /* ── Card ── */
+    .card {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 12px;
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+      transition: transform .2s, border-color .2s, box-shadow .2s;
+    }
+    .card:hover {
+      transform: translateY(-3px);
+      border-color: #3b82f6;
+      box-shadow: 0 8px 24px #1e40af33;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: .5rem;
+    }
+    .card-name {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #f1f5f9;
+      line-height: 1.3;
+    }
+    .card-price {
+      white-space: nowrap;
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #34d399;
+    }
+
+    .card-desc {
+      font-size: 0.83rem;
+      color: #94a3b8;
+      line-height: 1.5;
+      flex: 1;
+    }
+
+    .card-footer {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      margin-top: 0.4rem;
+    }
+    .badge {
+      font-size: 0.72rem;
+      padding: 0.25rem 0.6rem;
+      border-radius: 999px;
+      font-weight: 500;
+    }
+    .badge-empresa { background: #1e3a5f; color: #60a5fa; }
+    .badge-pais    { background: #1a2e1e; color: #4ade80; }
+
+    /* ── Estado vacío / carga / error ── */
+    .state-box {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+      padding: 4rem 2rem;
+      color: #475569;
+      font-size: 0.95rem;
+      grid-column: 1 / -1;
+    }
+    .state-box svg { opacity: .4; }
+    .state-box.error { color: #f87171; }
+    .spinner {
+      width: 40px; height: 40px;
+      border: 3px solid #334155;
+      border-top-color: #3b82f6;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Filtro por usuario ── */
+    .user-bar {
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+      padding: 0.75rem 2rem;
+      background: #0f172a;
+      border-bottom: 1px solid #1e293b;
+    }
+    .user-bar input {
+      background: #1e293b;
+      border: 1px solid #334155;
+      color: #e2e8f0;
+      border-radius: 8px;
+      padding: 0.45rem 0.8rem;
+      font-size: 0.88rem;
+      outline: none;
+      width: 230px;
+    }
+    .user-bar input:focus { border-color: #3b82f6; }
+    .user-bar button {
+      background: #0f3460;
+      border: 1px solid #1e40af;
+      color: #93c5fd;
+      border-radius: 8px;
+      padding: 0.45rem 0.9rem;
+      font-size: 0.88rem;
+      cursor: pointer;
+      transition: background .2s;
+    }
+    .user-bar button:hover { background: #1e3a5f; }
+    .user-bar label { font-size: 0.83rem; color: #64748b; }
+
+    @media (max-width: 600px) {
+      .toolbar { flex-direction: column; align-items: stretch; }
+      .toolbar input { width: 100%; }
+      .btn-refresh { margin-left: 0; }
+      .grid { padding: 1rem; gap: 1rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+    <ellipse cx="16" cy="8"  rx="13" ry="5" fill="#1d4ed8" stroke="#3b82f6" stroke-width="1.5"/>
+    <path d="M3 8v5c0 2.76 5.82 5 13 5s13-2.24 13-5V8" fill="#1e3a5f" stroke="#3b82f6" stroke-width="1.5"/>
+    <path d="M3 13v5c0 2.76 5.82 5 13 5s13-2.24 13-5v-5" fill="#172554" stroke="#3b82f6" stroke-width="1.5"/>
+    <path d="M3 18v5c0 2.76 5.82 5 13 5s13-2.24 13-5v-5" fill="#0f172a" stroke="#3b82f6" stroke-width="1.5"/>
+  </svg>
+  <div>
+    <h1>Catálogo de Productos</h1>
+    <p>Conectado a PostgreSQL · <span id="db-host">185.139.1.178:5432</span></p>
+  </div>
+</header>
+
+<!-- FILTRO POR USUARIO DELEGADO -->
+<div class="user-bar">
+  <label>Filtrar por usuario delegado:</label>
+  <input type="text" id="input-usuario" placeholder="ej: admin - MiEmpresa" />
+  <button onclick="cargarPorUsuario()">Buscar</button>
+  <button onclick="cargarTodos()" style="background:#14532d;border-color:#166534;color:#86efac">Ver todos</button>
+</div>
+
+<!-- TOOLBAR -->
+<div class="toolbar">
+  <input type="text" id="buscar" placeholder="🔍  Buscar producto, empresa o país…" oninput="filtrar()" />
+  <select id="filtro-empresa" onchange="filtrar()">
+    <option value="">Todas las empresas</option>
+  </select>
+  <select id="filtro-pais" onchange="filtrar()">
+    <option value="">Todos los países</option>
+  </select>
+  <button class="btn-refresh" onclick="cargarTodos()">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+      <path d="M23 4v6h-6"/><path d="M1 20v-6h6"/>
+      <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+    </svg>
+    Recargar
+  </button>
+</div>
+
+<!-- STATS -->
+<div class="stats">
+  <span>Mostrando <b id="count-visible">—</b> productos</span>
+  <span>Total en BD: <b id="count-total">—</b></span>
+  <span>Empresas: <b id="count-empresas">—</b></span>
+</div>
+
+<!-- GRID DE PRODUCTOS -->
+<div class="grid" id="grid">
+  <div class="state-box">
+    <div class="spinner"></div>
+    Conectando con PostgreSQL…
+  </div>
+</div>
+
+<script>
+  let todosLosProductos = [];
+
+  // ── Cargar todos los productos ──────────────────────────────────────────
+  async function cargarTodos() {
+    mostrarCargando();
+    try {
+      const res  = await fetch('/api/productos');
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error);
+      procesarProductos(data.productos);
+    } catch (err) {
+      mostrarError(err.message);
+    }
+  }
+
+  // ── Cargar por usuario delegado ─────────────────────────────────────────
+  async function cargarPorUsuario() {
+    const usuario = document.getElementById('input-usuario').value.trim();
+    if (!usuario) { cargarTodos(); return; }
+    mostrarCargando();
+    try {
+      const res  = await fetch(`/api/productos/${encodeURIComponent(usuario)}`);
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error);
+      procesarProductos(data.productos);
+    } catch (err) {
+      mostrarError(err.message);
+    }
+  }
+
+  // ── Procesar y mostrar ──────────────────────────────────────────────────
+  function procesarProductos(productos) {
+    todosLosProductos = productos;
+
+    // Poblar filtros
+    const empresas = [...new Set(productos.map(p => p.empresa).filter(Boolean))].sort();
+    const paises   = [...new Set(productos.map(p => p.pais).filter(Boolean))].sort();
+    llenarSelect('filtro-empresa', empresas);
+    llenarSelect('filtro-pais',    paises);
+
+    document.getElementById('count-total').textContent   = productos.length;
+    document.getElementById('count-empresas').textContent = empresas.length;
+
+    filtrar();
+  }
+
+  function llenarSelect(id, opciones) {
+    const sel = document.getElementById(id);
+    const primero = sel.options[0];
+    sel.innerHTML = '';
+    sel.appendChild(primero);
+    opciones.forEach(o => {
+      const opt = document.createElement('option');
+      opt.value = opt.textContent = o;
+      sel.appendChild(opt);
+    });
+  }
+
+  // ── Filtrar en cliente ──────────────────────────────────────────────────
+  function filtrar() {
+    const txt     = document.getElementById('buscar').value.toLowerCase();
+    const empresa = document.getElementById('filtro-empresa').value;
+    const pais    = document.getElementById('filtro-pais').value;
+
+    const filtrados = todosLosProductos.filter(p => {
+      const matchTxt  = !txt || [p.nombre, p.descripcion, p.empresa, p.pais]
+                          .some(v => v && v.toLowerCase().includes(txt));
+      const matchEmp  = !empresa || p.empresa === empresa;
+      const matchPais = !pais    || p.pais    === pais;
+      return matchTxt && matchEmp && matchPais;
+    });
+
+    document.getElementById('count-visible').textContent = filtrados.length;
+    renderCards(filtrados);
+  }
+
+  // ── Renderizar tarjetas ─────────────────────────────────────────────────
+  function renderCards(productos) {
+    const grid = document.getElementById('grid');
+
+    if (productos.length === 0) {
+      grid.innerHTML = `
+        <div class="state-box">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+            <path d="M11 8v6M8 11h6"/>
+          </svg>
+          No se encontraron productos con ese criterio.
+        </div>`;
+      return;
+    }
+
+    grid.innerHTML = productos.map(p => `
+      <div class="card">
+        <div class="card-header">
+          <span class="card-name">${esc(p.nombre) || '<em style="color:#475569">Sin nombre</em>'}</span>
+          <span class="card-price">${formatPrecio(p.precio)}</span>
+        </div>
+        <p class="card-desc">${esc(p.descripcion) || '<em style="color:#475569">Sin descripción</em>'}</p>
+        <div class="card-footer">
+          ${p.empresa ? `<span class="badge badge-empresa">🏢 ${esc(p.empresa)}</span>` : ''}
+          ${p.pais    ? `<span class="badge badge-pais">🌍 ${esc(p.pais)}</span>`    : ''}
+        </div>
+      </div>
+    `).join('');
+  }
+
+  // ── Utilidades ──────────────────────────────────────────────────────────
+  function mostrarCargando() {
+    document.getElementById('grid').innerHTML = `
+      <div class="state-box"><div class="spinner"></div>Cargando desde PostgreSQL…</div>`;
+  }
+
+  function mostrarError(msg) {
+    document.getElementById('grid').innerHTML = `
+      <div class="state-box error">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/>
+        </svg>
+        <strong>Error de conexión</strong>
+        <code style="font-size:.8rem;color:#fca5a5">${esc(msg)}</code>
+        <small>Verificá las variables de entorno en tu archivo .env</small>
+      </div>`;
+  }
+
+  function esc(s) {
+    if (!s) return '';
+    return String(s)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function formatPrecio(v) {
+    if (v == null) return '—';
+    const n = parseFloat(v);
+    return isNaN(n) ? String(v) : '$' + n.toLocaleString('es-AR', { minimumFractionDigits: 2 });
+  }
+
+  // ── Inicio ──────────────────────────────────────────────────────────────
+  cargarTodos();
+</script>
+</body>
+</html>
