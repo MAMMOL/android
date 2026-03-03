@@ -2,7 +2,7 @@ const { Pool } = require("pg");
 
 const pool = new Pool({
   user: process.env.POSTGRESS_USER_QUERY,
-  host: process.env.POSTGRESS_HOST,
+  host: 185.139.1.178,
   database: process.env.POSTGRESS_DB_QUERY,
   password: process.env.POSTGRESS_PASSWORD_QUERY,
   port: 5432,
@@ -21,3 +21,4 @@ module.exports = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
