@@ -5,7 +5,7 @@ const { Pool } = require('pg');
 function createPool() {
   return new Pool({
     user:            process.env.POSTGRESS_USER_QUERY,
-    host:            process.env.POSTGRESS_HOST || '185.139.1.178',
+    host:            185.139.1.178,
     database:        process.env.POSTGRESS_DB_QUERY,
     password:        process.env.POSTGRESS_PASSWORD_QUERY,
     port:            5432,
