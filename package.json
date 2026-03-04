@@ -1,71 +1,10 @@
 {
-  "name": "Software-de-caja",
-  "version": "10.0.5",
-  "description": "Cajaventas",
-  "main": "main.js",
-  "author": "Alfredo Soto",
-  "license": "MIT",
-  "scripts": {
-    "start": "electron .",
-    "pack": "electron-builder",
-    "build": "electron-builder",
-    "postinstall": "install-app-deps"
+  "name": "productos-postgres-vercel",
+  "version": "1.0.0",
+  "engines": {
+    "node": "24.x"
   },
   "dependencies": {
-    "@journeyapps/sqlcipher": "^5.3.1",
-    "@shopify/draggable": "^1.1.3",
-    "better-sqlite3": "^11.1.2",
-    "better-sqlite3-multiple-ciphers": "^11.1.2",
-    "csv-parser": "^3.0.0",
-    "dotenv": "^2.0.0",
-    "electron-is-dev": "^2.0.0",
-    "electron-reload": "^2.0.0-alpha.1",
-    "electron-store": "^10.0.0",
-    "electron-updater": "^6.1.4",
-    "express": "^4.21.1",
-    "ftp": "^0.3.10",
-    "http-server": "^14.1.1",
-    "isdev": "^1.0.1",
-    "jsonwebtoken": "^9.0.2",
-    "keytar": "^7.9.0",
-    "mysql2": "^3.11.3",
-    "nedb": "^1.8.0",
-    "node-fetch": "^3.3.2",
-    "oneshell-electron-pos-printer": "^1.0.226",
-    "pg": "^8.12.0",
-    "ping": "^0.4.4",
-    "sortablejs": "^1.15.2",
-    "toastify-js": "^1.12.0",
-    "uuid": "^9.0.1",
-    "xlsx": "^0.18.5"
-  },
-  "devDependencies": {
-    "electron": "^26.6.10",
-    "electron-builder": "^24.6.4"
-  },
-  "build": {
-    "asar": true,
-    "appId": "com.mamoll.com-Cajaventas",
-    "productName": "Caja de ventas",
-    "extraResources": [
-      "app-update.yml",
-      "bases/**",
-      "./base.db"
-    ],
-    "files": [
-      "**/*",
-      "caja.html",
-      ".env"
-    ],
-    "directories": {
-      "output": "instalador"
-    },
-    "win": {
-      "target": "nsis"
-    },
-    "nsis": {
-      "oneClick": false,
-      "allowToChangeInstallationDirectory": true
-    }
+    "pg": "8.11.3"
   }
 }
