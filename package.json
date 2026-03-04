@@ -2,7 +2,7 @@
   "name": "productos-postgres-vercel",
   "version": "1.0.0",
   "engines": {
-    "node": "18.x"
+    "node": "24.x"
   },
   "dependencies": {
     "pg": "8.11.3"
