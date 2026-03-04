@@ -1,82 +1,97 @@
-// api/productos.js — Serverless Function para Vercel
-const { Pool } = require('pg');
-
-// Pool se crea por invocación para evitar problemas de conexión en serverless
-function createPool() {
-  return new Pool({
-    user:            process.env.POSTGRESS_USER_QUERY,
-    host:            185.139.1.178,
-    database:        process.env.POSTGRESS_DB_QUERY,
-    password:        process.env.POSTGRESS_PASSWORD_QUERY,
-    port:            5432,
-    ssl:             { rejectUnauthorized: false },
-    connectionTimeoutMillis: 5000,
-    idleTimeoutMillis:       10000,
-    max:                     1,   // serverless: 1 conexión por invocación
-  });
-}
-
+// api/productos.js — Serverless Function para Vercel (CommonJS)
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Content-Type', 'application/json');
 
-  // Verificar que las variables de entorno existan
-  const { POSTGRESS_USER_QUERY, POSTGRESS_DB_QUERY, POSTGRESS_PASSWORD_QUERY } = process.env;
-  if (!POSTGRESS_USER_QUERY || !POSTGRESS_DB_QUERY || !POSTGRESS_PASSWORD_QUERY) {
+  // 1. Verificar variables de entorno
+  const user     = process.env.POSTGRESS_USER_QUERY;
+  const host     = process.env.POSTGRESS_HOST || '185.139.1.178';
+  const database = process.env.POSTGRESS_DB_QUERY;
+  const password = process.env.POSTGRESS_PASSWORD_QUERY;
+
+  const faltantes = [
+    !user     && 'POSTGRESS_USER_QUERY',
+    !database && 'POSTGRESS_DB_QUERY',
+    !password && 'POSTGRESS_PASSWORD_QUERY',
+  ].filter(Boolean);
+
+  if (faltantes.length > 0) {
     return res.status(500).json({
       success: false,
-      error: 'Faltan variables de entorno: ' + [
-        !POSTGRESS_USER_QUERY    && 'POSTGRESS_USER_QUERY',
-        !POSTGRESS_DB_QUERY      && 'POSTGRESS_DB_QUERY',
-        !POSTGRESS_PASSWORD_QUERY && 'POSTGRESS_PASSWORD_QUERY',
-      ].filter(Boolean).join(', ')
+      error: 'Faltan variables de entorno en Vercel: ' + faltantes.join(', '),
     });
   }
 
-  const pool = createPool();
+  // 2. Verificar que pg esté disponible
+  let Pool;
+  try {
+    Pool = require('pg').Pool;
+  } catch (e) {
+    return res.status(500).json({
+      success: false,
+      error: 'No se pudo cargar el módulo "pg": ' + e.message,
+    });
+  }
+
+  // 3. Conectar y consultar
+  const pool = new Pool({
+    user,
+    host,
+    database,
+    password,
+    port: 5432,
+    ssl:  { rejectUnauthorized: false },
+    max:  1,
+    connectionTimeoutMillis: 8000,
+  });
+
   const { usuario } = req.query;
 
   try {
     let result;
 
     if (usuario) {
-      result = await pool.query(`
-        SELECT
-          p."nameProductos"              AS nombre,
-          p."descriptionProductos"       AS descripcion,
-          p."priceProductos"             AS precio,
-          ep."nameEmpresasPaises"        AS empresa,
-          ep."namePaisLista"             AS pais,
-          ud."nombreUsuariosDelegados"   AS usuario_delegado
-        FROM public."empresasPaises" ep
-        LEFT JOIN public.productos p
-               ON ep."idEmpresasPaises" = p."idEmpresasPaisesProductos"
-        LEFT JOIN public."usuariosDelegados" ud
-               ON ep."idEmpresasPaises" = ud."idPuestosEmpresasPaises"
-        WHERE ud."nombreUsuariosDelegados" = $1
-        ORDER BY p."nameProductos"
-      `, [usuario]);
+      result = await pool.query(
+        `SELECT
+           p."nameProductos"            AS nombre,
+           p."descriptionProductos"     AS descripcion,
+           p."priceProductos"           AS precio,
+           ep."nameEmpresasPaises"      AS empresa,
+           ep."namePaisLista"           AS pais,
+           ud."nombreUsuariosDelegados" AS usuario_delegado
+         FROM public."empresasPaises" ep
+         LEFT JOIN public.productos p
+                ON ep."idEmpresasPaises" = p."idEmpresasPaisesProductos"
+         LEFT JOIN public."usuariosDelegados" ud
+                ON ep."idEmpresasPaises" = ud."idPuestosEmpresasPaises"
+         WHERE ud."nombreUsuariosDelegados" = $1
+         ORDER BY p."nameProductos"`,
+        [usuario]
+      );
     } else {
-      result = await pool.query(`
-        SELECT
-          p."nameProductos"        AS nombre,
-          p."descriptionProductos" AS descripcion,
-          p."priceProductos"       AS precio,
-          ep."nameEmpresasPaises"  AS empresa,
-          ep."namePaisLista"       AS pais
-        FROM public.productos p
-        LEFT JOIN public."empresasPaises" ep
-               ON ep."idEmpresasPaises" = p."idEmpresasPaisesProductos"
-        ORDER BY ep."nameEmpresasPaises", p."nameProductos"
-      `);
+      result = await pool.query(
+        `SELECT
+           p."nameProductos"        AS nombre,
+           p."descriptionProductos" AS descripcion,
+           p."priceProductos"       AS precio,
+           ep."nameEmpresasPaises"  AS empresa,
+           ep."namePaisLista"       AS pais
+         FROM public.productos p
+         LEFT JOIN public."empresasPaises" ep
+                ON ep."idEmpresasPaises" = p."idEmpresasPaisesProductos"
+         ORDER BY ep."nameEmpresasPaises", p."nameProductos"`
+      );
     }
 
-    res.status(200).json({ success: true, productos: result.rows });
+    return res.status(200).json({ success: true, productos: result.rows });
 
   } catch (err) {
-    console.error('PostgreSQL error:', err.message);
-    res.status(500).json({ success: false, error: err.message });
+    return res.status(500).json({
+      success: false,
+      error: err.message,
+      detalle: err.code || null,
+    });
   } finally {
     await pool.end().catch(() => {});
   }
-}
+};
