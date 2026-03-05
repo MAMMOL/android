@@ -1,14 +1,23 @@
-// api/datos.js — Serverless Function para Vercel
+// api/datos.js — Serverless Function para Vercel (DEBUG)
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Content-Type', 'application/json');
 
-  // Variables de entorno
+  console.log('=== INICIO REQUEST ===');
+
   const user     = process.env.PG_USER;
   const host     = process.env.PG_HOST || '185.139.1.178';
   const database = process.env.PG_DATABASE;
   const password = process.env.PG_PASSWORD;
   const port     = parseInt(process.env.PG_PORT || '5432');
+
+  console.log('Variables:', {
+    PG_USER:     user     ? user + ' OK'  : 'FALTA',
+    PG_HOST:     host,
+    PG_DATABASE: database ? database + ' OK' : 'FALTA',
+    PG_PASSWORD: password ? 'OK' : 'FALTA',
+    PG_PORT:     port,
+  });
 
   const faltantes = [
     !user     && 'PG_USER',
@@ -17,63 +26,55 @@ module.exports = async function handler(req, res) {
   ].filter(Boolean);
 
   if (faltantes.length > 0) {
+    console.log('FALTAN VARIABLES:', faltantes);
     return res.status(500).json({
       success: false,
-      error: 'Faltan variables de entorno: ' + faltantes.join(', '),
-      ayuda: 'Configurarlas en Vercel → Settings → Environment Variables',
+      paso: 'variables_entorno',
+      error: 'Faltan variables: ' + faltantes.join(', '),
     });
   }
 
   let Pool;
   try {
     Pool = require('pg').Pool;
+    console.log('Modulo pg cargado OK');
   } catch (e) {
+    console.log('Error cargando pg:', e.message);
     return res.status(500).json({
       success: false,
-      error: 'No se pudo cargar "pg": ' + e.message,
-      ayuda: 'Ejecutá: npm install pg',
+      paso: 'cargar_pg',
+      error: e.message,
     });
   }
 
+  console.log('Conectando a ' + host + ':' + port + ' db=' + database);
+
   const pool = new Pool({
-    user,
-    host,
-    database,
-    password,
-    port,
+    user, host, database, password, port,
     ssl: { rejectUnauthorized: false },
     max: 1,
     connectionTimeoutMillis: 8000,
   });
 
   try {
-    // Traer todas las tablas disponibles en el schema public
+    console.log('Ejecutando query...');
     const tablas = await pool.query(`
-      SELECT table_name
-      FROM information_schema.tables
-      WHERE table_schema = 'public'
-        AND table_type = 'BASE TABLE'
+      SELECT table_name FROM information_schema.tables
+      WHERE table_schema = 'public' AND table_type = 'BASE TABLE'
       ORDER BY table_name
     `);
+    console.log('Tablas encontradas:', tablas.rows.map(r => r.table_name));
 
-    // Determinar qué tabla mostrar
-    const tablaParam = req.query.tabla;
     const tablasDisponibles = tablas.rows.map(r => r.table_name);
+    const tablaParam = req.query.tabla;
+    let tablaNombre = (tablaParam && tablasDisponibles.includes(tablaParam))
+      ? tablaParam
+      : tablasDisponibles[0] || null;
 
     let muestra = null;
-    let tablaNombre = null;
-
-    // Si viene ?tabla= en la query, usar esa; sino usar la primera
-    if (tablaParam && tablasDisponibles.includes(tablaParam)) {
-      tablaNombre = tablaParam;
-    } else if (tablasDisponibles.length > 0) {
-      tablaNombre = tablasDisponibles[0];
-    }
-
     if (tablaNombre) {
-      const datos = await pool.query(
-        `SELECT * FROM public."${tablaNombre}" LIMIT 10`
-      );
+      console.log('Trayendo datos de:', tablaNombre);
+      const datos = await pool.query(`SELECT * FROM public."${tablaNombre}" LIMIT 10`);
       muestra = {
         tabla: tablaNombre,
         columnas: datos.fields.map(f => f.name),
@@ -86,17 +87,21 @@ module.exports = async function handler(req, res) {
       success: true,
       conexion: 'OK',
       base_de_datos: database,
-      tablas_encontradas: tablas.rows.map(r => r.table_name),
+      tablas_encontradas: tablasDisponibles,
       muestra,
     });
 
   } catch (err) {
+    console.log('ERROR en query:', err.message, 'codigo:', err.code);
     return res.status(500).json({
       success: false,
+      paso: 'consulta_db',
       error: err.message,
       codigo: err.code || null,
+      detalle: err.detail || null,
     });
   } finally {
     await pool.end().catch(() => {});
+    console.log('=== FIN REQUEST ===');
   }
 };
