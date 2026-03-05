@@ -1,8 +1,0 @@
-{
-  "name": "pg-explorer-vercel",
-  "version": "1.0.0",
-  "description": "Explorador de PostgreSQL desplegado en Vercel",
-  "dependencies": {
-    "pg": "^8.11.3"
-  }
-}
