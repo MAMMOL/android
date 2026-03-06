@@ -687,6 +687,21 @@
     .leyenda-item { display: flex; align-items: center; gap: 6px; }
     .leyenda-box { width: 12px; height: 12px; border-radius: 2px; border: 1px solid; }
 
+    /* ── CONTROLES ESTANTE ── */
+    .ctrl-btn {
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      color: var(--muted);
+      font-size: .65rem;
+      padding: 3px 6px;
+      cursor: pointer;
+      line-height: 1;
+      transition: border-color .15s, color .15s;
+    }
+    .ctrl-btn:hover { border-color: var(--accent2); color: var(--accent2); }
+    .ctrl-del:hover { border-color: var(--danger) !important; color: var(--danger) !important; }
+
     /* ── ALERTAS GLOBALES ── */
     #alerta-bar {
       display: none;
@@ -1322,13 +1337,15 @@
           // Controles del estante
           const controles = document.createElement("div");
           controles.style.cssText = "display:flex;gap:3px;margin-bottom:2px";
+          controles.style.cssText = "display:flex;flex-direction:column;gap:2px;margin-bottom:2px;align-items:center";
           controles.innerHTML = `
-            <button onclick="moverEstante(${est.id},'izq')" title="Mover izquierda"
-              style="background:none;border:1px solid var(--border);border-radius:3px;color:var(--muted);font-size:.65rem;padding:2px 5px;cursor:pointer;line-height:1" onmouseover="this.style.borderColor='var(--accent2)';this.style.color='var(--accent2)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">◀</button>
-            <button onclick="eliminarEstante(${est.id})" title="Eliminar estante"
-              style="background:none;border:1px solid var(--border);border-radius:3px;color:var(--muted);font-size:.65rem;padding:2px 5px;cursor:pointer;line-height:1" onmouseover="this.style.borderColor='var(--danger)';this.style.color='var(--danger)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">✕</button>
-            <button onclick="moverEstante(${est.id},'der')" title="Mover derecha"
-              style="background:none;border:1px solid var(--border);border-radius:3px;color:var(--muted);font-size:.65rem;padding:2px 5px;cursor:pointer;line-height:1" onmouseover="this.style.borderColor='var(--accent2)';this.style.color='var(--accent2)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">▶</button>
+            <div style="display:flex;gap:3px">
+              <button onclick="moverEstante(${est.id},'izq')" title="Mover izquierda" class="ctrl-btn">◀</button>
+              <button onclick="moverEstante(${est.id},'arriba')" title="Mover arriba (pasillo anterior)" class="ctrl-btn">▲</button>
+              <button onclick="eliminarEstante(${est.id})" title="Eliminar estante" class="ctrl-btn ctrl-del">✕</button>
+              <button onclick="moverEstante(${est.id},'abajo')" title="Mover abajo (pasillo siguiente)" class="ctrl-btn">▼</button>
+              <button onclick="moverEstante(${est.id},'der')" title="Mover derecha" class="ctrl-btn">▶</button>
+            </div>
           `;
           estanteWrap.appendChild(controles);
 
@@ -1424,44 +1441,63 @@
       if (idx < 0) return;
       const est = estantesList[idx];
 
+      const pasillos = [...new Set(estantesList.map(e => e.pasillo))].sort((a,b)=>a-b);
+      const idxP = pasillos.indexOf(est.pasillo);
+
       if (direccion === 'izq') {
-        // Buscar el anterior en el mismo pasillo
-        const mismoPasillo = estantesList.filter(e => e.pasillo === est.pasillo && e.orden < est.orden);
-        if (mismoPasillo.length > 0) {
-          // Intercambiar orden con el inmediato anterior
-          const prev = mismoPasillo.reduce((a,b) => a.orden > b.orden ? a : b);
+        // Intercambiar con el anterior en el mismo pasillo
+        const anterior = estantesList.filter(e => e.pasillo === est.pasillo && e.orden < est.orden);
+        if (anterior.length > 0) {
+          const prev = anterior.reduce((a,b) => a.orden > b.orden ? a : b);
           [est.orden, prev.orden] = [prev.orden, est.orden];
-        } else {
-          // Mover al pasillo anterior si existe
-          const pasillos = [...new Set(estantesList.map(e => e.pasillo))].sort((a,b)=>a-b);
-          const idxP = pasillos.indexOf(est.pasillo);
-          if (idxP > 0) {
-            const prevPasillo = pasillos[idxP - 1];
-            const enPrev = estantesList.filter(e => e.pasillo === prevPasillo);
-            const maxOrden = enPrev.length > 0 ? Math.max(...enPrev.map(e => e.orden)) : 0;
-            est.pasillo = prevPasillo;
-            est.orden   = maxOrden + 1;
-          }
+        } else if (idxP > 0) {
+          // Mover al final del pasillo anterior
+          const prevPasillo = pasillos[idxP - 1];
+          const enPrev = estantesList.filter(e => e.pasillo === prevPasillo);
+          est.pasillo = prevPasillo;
+          est.orden   = enPrev.length > 0 ? Math.max(...enPrev.map(e => e.orden)) + 1 : 1;
         }
-      } else {
-        // Buscar el siguiente en el mismo pasillo
-        const mismoPasillo = estantesList.filter(e => e.pasillo === est.pasillo && e.orden > est.orden);
-        if (mismoPasillo.length > 0) {
-          const next = mismoPasillo.reduce((a,b) => a.orden < b.orden ? a : b);
+      } else if (direccion === 'der') {
+        // Intercambiar con el siguiente en el mismo pasillo
+        const siguiente = estantesList.filter(e => e.pasillo === est.pasillo && e.orden > est.orden);
+        if (siguiente.length > 0) {
+          const next = siguiente.reduce((a,b) => a.orden < b.orden ? a : b);
           [est.orden, next.orden] = [next.orden, est.orden];
-        } else {
-          // Mover al pasillo siguiente si existe
-          const pasillos = [...new Set(estantesList.map(e => e.pasillo))].sort((a,b)=>a-b);
-          const idxP = pasillos.indexOf(est.pasillo);
-          if (idxP < pasillos.length - 1) {
-            const nextPasillo = pasillos[idxP + 1];
-            est.pasillo = nextPasillo;
-            est.orden   = 1;
-            // Reordenar los que ya estaban en ese pasillo
-            estantesList.filter(e => e.pasillo === nextPasillo && e.id !== id)
-              .sort((a,b) => a.orden - b.orden)
-              .forEach((e, i) => e.orden = i + 2);
-          }
+        } else if (idxP < pasillos.length - 1) {
+          // Mover al inicio del pasillo siguiente
+          const nextPasillo = pasillos[idxP + 1];
+          estantesList.filter(e => e.pasillo === nextPasillo)
+            .sort((a,b) => a.orden - b.orden)
+            .forEach((e, i) => e.orden = i + 2);
+          est.pasillo = nextPasillo;
+          est.orden   = 1;
+        }
+      } else if (direccion === 'arriba') {
+        // Mover al pasillo anterior (al final de ese pasillo)
+        if (idxP > 0) {
+          const prevPasillo = pasillos[idxP - 1];
+          const enPrev = estantesList.filter(e => e.pasillo === prevPasillo);
+          // Cerrar hueco en pasillo actual
+          estantesList.filter(e => e.pasillo === est.pasillo && e.id !== id)
+            .sort((a,b) => a.orden - b.orden)
+            .forEach((e, i) => e.orden = i + 1);
+          est.pasillo = prevPasillo;
+          est.orden   = enPrev.length > 0 ? Math.max(...enPrev.map(e => e.orden)) + 1 : 1;
+        }
+      } else if (direccion === 'abajo') {
+        // Mover al pasillo siguiente (al inicio de ese pasillo)
+        if (idxP < pasillos.length - 1) {
+          const nextPasillo = pasillos[idxP + 1];
+          // Cerrar hueco en pasillo actual
+          estantesList.filter(e => e.pasillo === est.pasillo && e.id !== id)
+            .sort((a,b) => a.orden - b.orden)
+            .forEach((e, i) => e.orden = i + 1);
+          // Hacer espacio en pasillo destino
+          estantesList.filter(e => e.pasillo === nextPasillo)
+            .sort((a,b) => a.orden - b.orden)
+            .forEach((e, i) => e.orden = i + 2);
+          est.pasillo = nextPasillo;
+          est.orden   = 1;
         }
       }
       renderDeposito();
