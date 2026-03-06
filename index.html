@@ -963,6 +963,7 @@
           </div>
           <button class="btn-generar" onclick="generarDeposito()">GENERAR DEPÓSITO</button>
           <button class="btn-generar" onclick="agregarEstante()" style="margin-top:8px;background:var(--bg3);border:1px solid var(--accent2);color:var(--accent2);">+ AGREGAR ESTANTE</button>
+          <button class="btn-generar" onclick="agregarPasillo()" style="margin-top:6px;background:var(--bg3);border:1px solid var(--accent);color:var(--accent);">+ AGREGAR PASILLO</button>
         </div>
 
         <!-- Asignar producto -->
@@ -980,10 +981,11 @@
         <div class="panel-section" id="panel-info" style="display:none">
           <div class="panel-section-title">Celda seleccionada</div>
           <div id="info-celda" style="font-size:.78rem;color:var(--text);line-height:1.8"></div>
-          <div class="stock-campos">
+          <!-- Cantidad siempre visible cuando hay celda seleccionada -->
+          <div class="stock-campos" id="campos-stock">
             <div>
               <div class="stock-campo-label">Cantidad</div>
-              <input class="stock-campo-input" id="inp-cantidad" type="number" min="0" value="0" placeholder="0" />
+              <input class="stock-campo-input" id="inp-cantidad" type="number" min="-999" value="0" placeholder="0" />
             </div>
             <div>
               <div class="stock-campo-label">Alerta si ≤</div>
@@ -991,7 +993,7 @@
             </div>
           </div>
           <button class="btn-guardar-stock" onclick="guardarStockCelda()">GUARDAR STOCK</button>
-          <button onclick="limpiarCelda()" style="margin-top:8px;width:100%;padding:8px;background:none;border:1px solid var(--danger);border-radius:4px;color:var(--danger);font-family:'JetBrains Mono',monospace;font-size:.72rem;cursor:pointer;">
+          <button id="btn-quitar-producto" onclick="limpiarCelda()" style="display:none;margin-top:8px;width:100%;padding:8px;background:none;border:1px solid var(--danger);border-radius:4px;color:var(--danger);font-family:'JetBrains Mono',monospace;font-size:.72rem;cursor:pointer;">
             QUITAR PRODUCTO
           </button>
         </div>
@@ -1412,6 +1414,21 @@
       verificarAlertas();
     }
 
+    function agregarPasillo() {
+      const filas    = parseInt(document.getElementById("cfg-filas").value)    || 4;
+      const columnas = parseInt(document.getElementById("cfg-columnas").value) || 3;
+      const niveles  = parseInt(document.getElementById("cfg-niveles").value)  || 4;
+      const nEstantes= parseInt(document.getElementById("cfg-estantes").value) || 3;
+      // Calcular el número del nuevo pasillo
+      const pasillos = [...new Set(estantesList.map(e => e.pasillo))].sort((a,b)=>a-b);
+      const nuevoPasillo = pasillos.length > 0 ? Math.max(...pasillos) + 1 : 1;
+      // Agregar los estantes del nuevo pasillo
+      for (let e = 1; e <= nEstantes; e++) {
+        estantesList.push({ id: nextEstanteId++, pasillo: nuevoPasillo, orden: e, filas, columnas, niveles });
+      }
+      renderDeposito();
+    }
+
     function agregarEstante() {
       const filas    = parseInt(document.getElementById("cfg-filas").value)    || 4;
       const columnas = parseInt(document.getElementById("cfg-columnas").value) || 3;
@@ -1520,9 +1537,13 @@
     function actualizarPanelInfo(key, entry) {
       const panel = document.getElementById("panel-info");
       const info  = document.getElementById("info-celda");
+      const btnQuitar = document.getElementById("btn-quitar-producto");
       if (!key) { panel.style.display = "none"; return; }
+
+      // Siempre mostrar el panel cuando hay celda seleccionada
       panel.style.display = "block";
       const prod = entry?.producto;
+
       if (prod) {
         const cant   = entry.cantidad ?? 0;
         const umbral = entry.umbral   ?? 2;
@@ -1534,8 +1555,10 @@
           <div><span style="color:var(--muted)">Stock:</span> <span style="color:${color};font-weight:700">${cant} uds</span></div>
           <div><span style="color:var(--muted)">Umbral:</span> ${umbral} uds</div>
         `;
+        btnQuitar.style.display = "block";
       } else {
-        info.innerHTML = `<span style="color:var(--muted)">Celda vacía — asigna un producto primero</span>`;
+        info.innerHTML = `<span style="color:var(--muted)">Celda vacía — asigná un producto primero,<br>luego podés cargar la cantidad.</span>`;
+        btnQuitar.style.display = "none";
       }
     }
 
