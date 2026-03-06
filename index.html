@@ -947,6 +947,7 @@
             <input class="config-input" id="cfg-niveles" type="number" min="1" max="10" value="4" />
           </div>
           <button class="btn-generar" onclick="generarDeposito()">GENERAR DEPÓSITO</button>
+          <button class="btn-generar" onclick="agregarEstante()" style="margin-top:8px;background:var(--bg3);border:1px solid var(--accent2);color:var(--accent2);">+ AGREGAR ESTANTE</button>
         </div>
 
         <!-- Asignar producto -->
@@ -1248,7 +1249,11 @@
     }
 
     // ── STOCK ─────────────────────────────────────────────
-    // stockData: { key: { producto, cantidad, umbral } }
+    // Modelo: lista de estantes con posición
+    // estantesList: [ { id, pasillo, orden, filas, columnas, niveles } ]
+    // stockData: { "E{id}-N{n}-F{f}-C{c}": { producto, cantidad, umbral } }
+    let estantesList  = [];   // lista maestra de estantes
+    let nextEstanteId = 1;    // contador autoincremental
     let stockData     = {};
     let celdaActual   = null;
     let productoStock = null;
@@ -1261,12 +1266,25 @@
     });
 
     function generarDeposito() {
-      const pasillos = parseInt(document.getElementById("cfg-pasillos").value) || 2;
-      const estantes = parseInt(document.getElementById("cfg-estantes").value) || 3;
-      const filas    = parseInt(document.getElementById("cfg-filas").value)    || 4;
-      const columnas = parseInt(document.getElementById("cfg-columnas").value) || 3;
-      const niveles  = parseInt(document.getElementById("cfg-niveles").value)  || 4;
+      // Generar desde config solo si la lista está vacía
+      if (estantesList.length === 0) {
+        const nPasillos = parseInt(document.getElementById("cfg-pasillos").value) || 2;
+        const nEstantes = parseInt(document.getElementById("cfg-estantes").value) || 3;
+        const filas     = parseInt(document.getElementById("cfg-filas").value)    || 4;
+        const columnas  = parseInt(document.getElementById("cfg-columnas").value) || 3;
+        const niveles   = parseInt(document.getElementById("cfg-niveles").value)  || 4;
+        estantesList = [];
+        nextEstanteId = 1;
+        for (let p = 1; p <= nPasillos; p++) {
+          for (let e = 1; e <= nEstantes; e++) {
+            estantesList.push({ id: nextEstanteId++, pasillo: p, orden: e, filas, columnas, niveles });
+          }
+        }
+      }
+      renderDeposito();
+    }
 
+    function renderDeposito() {
       celdaActual = null;
       actualizarPanelInfo();
 
@@ -1274,7 +1292,18 @@
       const dep = document.createElement("div");
       dep.className = "deposito-3d";
 
-      for (let p = 1; p <= pasillos; p++) {
+      // Agrupar por pasillo
+      const pasillosMap = {};
+      for (const est of estantesList) {
+        if (!pasillosMap[est.pasillo]) pasillosMap[est.pasillo] = [];
+        pasillosMap[est.pasillo].push(est);
+      }
+
+      const pasillosOrdenados = Object.keys(pasillosMap).map(Number).sort((a,b)=>a-b);
+
+      for (const p of pasillosOrdenados) {
+        const lista = pasillosMap[p].sort((a,b) => a.orden - b.orden);
+
         const pasilloWrap = document.createElement("div");
         pasilloWrap.className = "pasillo-wrap";
 
@@ -1283,27 +1312,40 @@
         pasilloLabel.textContent = `PASILLO ${p}`;
         pasilloWrap.appendChild(pasilloLabel);
 
-        const estandesFila = document.createElement("div");
-        estandesFila.className = "estantes-fila";
+        const estantesFila = document.createElement("div");
+        estantesFila.className = "estantes-fila";
 
-        for (let e = 1; e <= estantes; e++) {
+        for (const est of lista) {
           const estanteWrap = document.createElement("div");
+          estanteWrap.style.cssText = "display:flex;flex-direction:column;align-items:center;gap:4px";
+
+          // Controles del estante
+          const controles = document.createElement("div");
+          controles.style.cssText = "display:flex;gap:3px;margin-bottom:2px";
+          controles.innerHTML = `
+            <button onclick="moverEstante(${est.id},'izq')" title="Mover izquierda"
+              style="background:none;border:1px solid var(--border);border-radius:3px;color:var(--muted);font-size:.65rem;padding:2px 5px;cursor:pointer;line-height:1" onmouseover="this.style.borderColor='var(--accent2)';this.style.color='var(--accent2)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">◀</button>
+            <button onclick="eliminarEstante(${est.id})" title="Eliminar estante"
+              style="background:none;border:1px solid var(--border);border-radius:3px;color:var(--muted);font-size:.65rem;padding:2px 5px;cursor:pointer;line-height:1" onmouseover="this.style.borderColor='var(--danger)';this.style.color='var(--danger)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">✕</button>
+            <button onclick="moverEstante(${est.id},'der')" title="Mover derecha"
+              style="background:none;border:1px solid var(--border);border-radius:3px;color:var(--muted);font-size:.65rem;padding:2px 5px;cursor:pointer;line-height:1" onmouseover="this.style.borderColor='var(--accent2)';this.style.color='var(--accent2)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">▶</button>
+          `;
+          estanteWrap.appendChild(controles);
 
           const estante = document.createElement("div");
           estante.className = "estante-3d";
 
-          for (let n = 1; n <= niveles; n++) {
+          for (let n = 1; n <= est.niveles; n++) {
             const nivelRow = document.createElement("div");
             nivelRow.className = "nivel-row";
-
-            for (let f = 1; f <= filas; f++) {
-              for (let c = 1; c <= columnas; c++) {
-                const key = `P${p}-E${e}-N${n}-F${f}-C${c}`;
+            for (let f = 1; f <= est.filas; f++) {
+              for (let c = 1; c <= est.columnas; c++) {
+                const key   = `E${est.id}-N${n}-F${f}-C${c}`;
+                const entry = stockData[key];
                 const celda = document.createElement("div");
                 celda.className = "celda";
                 celda.dataset.key = key;
 
-                const entry = stockData[key];
                 const textoDiv = document.createElement("div");
                 textoDiv.className = "celda-texto";
                 const coordDiv = document.createElement("div");
@@ -1313,22 +1355,21 @@
                 tooltip.className = "celda-tooltip";
 
                 if (entry && entry.producto) {
-                  const cant   = entry.cantidad ?? 0;
-                  const umbral = entry.umbral   ?? 2;
+                  const cant    = entry.cantidad ?? 0;
+                  const umbral  = entry.umbral   ?? 2;
                   const critico = cant <= 0;
                   const bajo    = !critico && cant <= umbral;
                   celda.classList.add(critico ? "stock-critico" : bajo ? "stock-bajo" : "stock-ok");
                   textoDiv.innerHTML = `<div style="font-size:5px;overflow:hidden;max-height:14px">${entry.producto.nameProductos || ""}</div><div style="font-size:7px;font-weight:700">${cant}</div>`;
-                  tooltip.innerHTML = `<strong>${entry.producto.nameProductos || ""}</strong><br>${entry.producto.marcaProductos || ""}<br><span style="color:var(--accent)">${fmt(entry.produto ? entry.producto.priceProductos : "")}</span><br>Cant: ${cant} · Umbral: ${umbral}`;
+                  tooltip.innerHTML  = `<strong>${entry.producto.nameProductos || ""}</strong><br>${entry.producto.marcaProductos || ""}<br><span style="color:var(--accent)">${fmt(entry.producto.priceProductos)}</span><br>Cant: ${cant} · Umbral: ${umbral}`;
                 } else {
                   textoDiv.textContent = "";
-                  tooltip.textContent  = `P${p} · Est.${e} · Niv.${n} · Fil.${f} · Col.${c}`;
+                  tooltip.textContent  = `Est.${est.id} · P${est.pasillo} · N${n}·F${f}·C${c}`;
                 }
 
                 celda.appendChild(textoDiv);
                 celda.appendChild(coordDiv);
                 celda.appendChild(tooltip);
-
                 celda.addEventListener("click", () => seleccionarCelda(key, celda));
                 nivelRow.appendChild(celda);
               }
@@ -1338,20 +1379,92 @@
 
           const estanteId = document.createElement("div");
           estanteId.className = "estante-id";
-          estanteId.textContent = `EST. ${e}`;
+          estanteId.textContent = `EST. ${est.id}  ·  P${est.pasillo}`;
 
           estanteWrap.appendChild(estante);
           estanteWrap.appendChild(estanteId);
-          estandesFila.appendChild(estanteWrap);
+          estantesFila.appendChild(estanteWrap);
         }
 
-        pasilloWrap.appendChild(estandesFila);
+        pasilloWrap.appendChild(estantesFila);
         dep.appendChild(pasilloWrap);
       }
 
       container.innerHTML = "";
       container.appendChild(dep);
       verificarAlertas();
+    }
+
+    function agregarEstante() {
+      const filas    = parseInt(document.getElementById("cfg-filas").value)    || 4;
+      const columnas = parseInt(document.getElementById("cfg-columnas").value) || 3;
+      const niveles  = parseInt(document.getElementById("cfg-niveles").value)  || 4;
+      // Agregar al último pasillo existente, o pasillo 1 si no hay ninguno
+      const pasillos = [...new Set(estantesList.map(e => e.pasillo))].sort((a,b)=>a-b);
+      const ultimoPasillo = pasillos.length > 0 ? pasillos[pasillos.length - 1] : 1;
+      const enPasillo = estantesList.filter(e => e.pasillo === ultimoPasillo);
+      const maxOrden  = enPasillo.length > 0 ? Math.max(...enPasillo.map(e => e.orden)) : 0;
+      estantesList.push({ id: nextEstanteId++, pasillo: ultimoPasillo, orden: maxOrden + 1, filas, columnas, niveles });
+      renderDeposito();
+    }
+
+    function eliminarEstante(id) {
+      if (!confirm(`¿Eliminar estante ${id}? Se perderán los productos asignados en él.`)) return;
+      // Limpiar celdas del estante
+      for (const key of Object.keys(stockData)) {
+        if (key.startsWith(`E${id}-`)) delete stockData[key];
+      }
+      estantesList = estantesList.filter(e => e.id !== id);
+      renderDeposito();
+    }
+
+    function moverEstante(id, direccion) {
+      // Lista global ordenada por pasillo y orden
+      const idx = estantesList.findIndex(e => e.id === id);
+      if (idx < 0) return;
+      const est = estantesList[idx];
+
+      if (direccion === 'izq') {
+        // Buscar el anterior en el mismo pasillo
+        const mismoPasillo = estantesList.filter(e => e.pasillo === est.pasillo && e.orden < est.orden);
+        if (mismoPasillo.length > 0) {
+          // Intercambiar orden con el inmediato anterior
+          const prev = mismoPasillo.reduce((a,b) => a.orden > b.orden ? a : b);
+          [est.orden, prev.orden] = [prev.orden, est.orden];
+        } else {
+          // Mover al pasillo anterior si existe
+          const pasillos = [...new Set(estantesList.map(e => e.pasillo))].sort((a,b)=>a-b);
+          const idxP = pasillos.indexOf(est.pasillo);
+          if (idxP > 0) {
+            const prevPasillo = pasillos[idxP - 1];
+            const enPrev = estantesList.filter(e => e.pasillo === prevPasillo);
+            const maxOrden = enPrev.length > 0 ? Math.max(...enPrev.map(e => e.orden)) : 0;
+            est.pasillo = prevPasillo;
+            est.orden   = maxOrden + 1;
+          }
+        }
+      } else {
+        // Buscar el siguiente en el mismo pasillo
+        const mismoPasillo = estantesList.filter(e => e.pasillo === est.pasillo && e.orden > est.orden);
+        if (mismoPasillo.length > 0) {
+          const next = mismoPasillo.reduce((a,b) => a.orden < b.orden ? a : b);
+          [est.orden, next.orden] = [next.orden, est.orden];
+        } else {
+          // Mover al pasillo siguiente si existe
+          const pasillos = [...new Set(estantesList.map(e => e.pasillo))].sort((a,b)=>a-b);
+          const idxP = pasillos.indexOf(est.pasillo);
+          if (idxP < pasillos.length - 1) {
+            const nextPasillo = pasillos[idxP + 1];
+            est.pasillo = nextPasillo;
+            est.orden   = 1;
+            // Reordenar los que ya estaban en ese pasillo
+            estantesList.filter(e => e.pasillo === nextPasillo && e.id !== id)
+              .sort((a,b) => a.orden - b.orden)
+              .forEach((e, i) => e.orden = i + 2);
+          }
+        }
+      }
+      renderDeposito();
     }
 
     function seleccionarCelda(key, el) {
