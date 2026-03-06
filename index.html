@@ -687,7 +687,145 @@
     .leyenda-item { display: flex; align-items: center; gap: 6px; }
     .leyenda-box { width: 12px; height: 12px; border-radius: 2px; border: 1px solid; }
 
-    @keyframes fadeUp {
+    /* ── ALERTAS GLOBALES ── */
+    #alerta-bar {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 1000;
+      background: #1a0a08;
+      border-bottom: 2px solid var(--danger);
+      padding: 0 24px;
+      max-height: 48px;
+      overflow: hidden;
+      transition: max-height .3s;
+      cursor: pointer;
+    }
+    #alerta-bar.expandido { max-height: 400px; overflow-y: auto; }
+    #alerta-bar.show { display: block; }
+
+    .alerta-bar-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 48px;
+      font-size: .75rem;
+      color: var(--danger);
+      letter-spacing: 1px;
+    }
+
+    .alerta-bar-badge {
+      background: var(--danger);
+      color: white;
+      border-radius: 20px;
+      padding: 2px 8px;
+      font-size: .65rem;
+      font-weight: 700;
+      margin-left: 8px;
+    }
+
+    .alerta-lista {
+      padding: 8px 0 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .alerta-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 12px;
+      background: #2a1008;
+      border: 1px solid #5a2010;
+      border-radius: var(--radius);
+      font-size: .75rem;
+    }
+
+    .alerta-item-nombre { color: var(--text); font-weight: 600; }
+    .alerta-item-info   { color: var(--muted); font-size: .68rem; margin-top: 2px; }
+
+    .alerta-badge-critico {
+      background: var(--danger);
+      color: white;
+      border-radius: 4px;
+      padding: 2px 8px;
+      font-size: .68rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .alerta-badge-bajo {
+      background: #ff8c00;
+      color: #0a0a0f;
+      border-radius: 4px;
+      padding: 2px 8px;
+      font-size: .68rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    /* offset para que la topbar no quede tapada */
+    body.tiene-alerta .screen.active > .topbar,
+    body.tiene-alerta .screen.active > .stock-topbar { top: 48px; }
+
+    /* Colores de celda según stock */
+    .celda.stock-ok     { background: #0d2a10; border-color: #2a6a30; }
+    .celda.stock-bajo   { background: #2a1a00; border-color: #8c4400; }
+    .celda.stock-critico{ background: #2a0808; border-color: var(--danger); }
+
+    .celda.stock-ok .celda-texto     { color: var(--accent2); }
+    .celda.stock-bajo .celda-texto   { color: #ff8c00; }
+    .celda.stock-critico .celda-texto{ color: var(--danger); }
+
+    /* Campos cantidad y umbral en panel info */
+    .stock-campos {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin: 10px 0;
+    }
+
+    .stock-campo-label {
+      font-size: .62rem;
+      color: var(--muted);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
+    .stock-campo-input {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .9rem;
+      padding: 7px 10px;
+      outline: none;
+      text-align: center;
+      transition: border-color .2s;
+    }
+    .stock-campo-input:focus { border-color: var(--accent); }
+
+    .btn-guardar-stock {
+      width: 100%;
+      padding: 9px;
+      background: var(--accent);
+      color: #0a0a0f;
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: .78rem;
+      border: none;
+      border-radius: var(--radius);
+      cursor: pointer;
+      margin-top: 6px;
+      transition: opacity .2s;
+    }
+    .btn-guardar-stock:hover { opacity: .85; }
+
+    /* leyenda extra */
       from { opacity: 0; transform: translateY(10px); }
       to   { opacity: 1; transform: translateY(0); }
     }
@@ -695,6 +833,18 @@
   </style>
 </head>
 <body>
+
+  <!-- ══════════════ BARRA ALERTAS GLOBAL ══════════════ -->
+  <div id="alerta-bar" onclick="toggleAlertas()">
+    <div class="alerta-bar-header">
+      <div>
+        ⚠️ ALERTAS DE STOCK
+        <span class="alerta-bar-badge" id="alerta-count">0</span>
+      </div>
+      <div style="font-size:.65rem;color:var(--muted)">CLICK PARA VER DETALLE ▼</div>
+    </div>
+    <div class="alerta-lista" id="alerta-lista"></div>
+  </div>
 
   <!-- ══════════════ LOGIN ══════════════ -->
   <div id="screen-login" class="screen active">
@@ -814,7 +964,18 @@
         <div class="panel-section" id="panel-info" style="display:none">
           <div class="panel-section-title">Celda seleccionada</div>
           <div id="info-celda" style="font-size:.78rem;color:var(--text);line-height:1.8"></div>
-          <button onclick="limpiarCelda()" style="margin-top:10px;width:100%;padding:8px;background:none;border:1px solid var(--danger);border-radius:4px;color:var(--danger);font-family:'JetBrains Mono',monospace;font-size:.72rem;cursor:pointer;">
+          <div class="stock-campos">
+            <div>
+              <div class="stock-campo-label">Cantidad</div>
+              <input class="stock-campo-input" id="inp-cantidad" type="number" min="0" value="0" placeholder="0" />
+            </div>
+            <div>
+              <div class="stock-campo-label">Alerta si ≤</div>
+              <input class="stock-campo-input" id="inp-umbral" type="number" min="0" value="2" placeholder="2" />
+            </div>
+          </div>
+          <button class="btn-guardar-stock" onclick="guardarStockCelda()">GUARDAR STOCK</button>
+          <button onclick="limpiarCelda()" style="margin-top:8px;width:100%;padding:8px;background:none;border:1px solid var(--danger);border-radius:4px;color:var(--danger);font-family:'JetBrains Mono',monospace;font-size:.72rem;cursor:pointer;">
             QUITAR PRODUCTO
           </button>
         </div>
@@ -835,7 +996,15 @@
           </div>
           <div class="leyenda-item">
             <div class="leyenda-box" style="background:#0d2a10;border-color:#2a6a30"></div>
-            Ocupada
+            Stock OK
+          </div>
+          <div class="leyenda-item">
+            <div class="leyenda-box" style="background:#2a1a00;border-color:#8c4400"></div>
+            Stock bajo
+          </div>
+          <div class="leyenda-item">
+            <div class="leyenda-box" style="background:#2a0808;border-color:var(--danger)"></div>
+            Crítico / negativo
           </div>
           <div class="leyenda-item">
             <div class="leyenda-box" style="background:#1a1a00;border-color:var(--accent)"></div>
@@ -1079,9 +1248,10 @@
     }
 
     // ── STOCK ─────────────────────────────────────────────
-    let stockData     = {};   // { "P1-E2-N3-F1-C2": { producto } }
-    let celdaActual   = null; // key de celda seleccionada
-    let productoStock = null; // producto a asignar
+    // stockData: { key: { producto, cantidad, umbral } }
+    let stockData     = {};
+    let celdaActual   = null;
+    let productoStock = null;
 
     document.getElementById("btn-stock").addEventListener("click", () => {
       showScreen("screen-stock");
@@ -1133,24 +1303,26 @@
                 celda.className = "celda";
                 celda.dataset.key = key;
 
-                const prod = stockData[key];
+                const entry = stockData[key];
                 const textoDiv = document.createElement("div");
                 textoDiv.className = "celda-texto";
-
                 const coordDiv = document.createElement("div");
                 coordDiv.className = "celda-coord";
                 coordDiv.textContent = `N${n}F${f}C${c}`;
-
                 const tooltip = document.createElement("div");
                 tooltip.className = "celda-tooltip";
 
-                if (prod) {
-                  celda.classList.add("ocupada");
-                  textoDiv.textContent = prod.nameProductos || "";
-                  tooltip.innerHTML = `<strong>${prod.nameProductos || ""}</strong><br>${prod.marcaProductos || ""}<br><span style="color:var(--accent)">${fmt(prod.priceProductos)}</span>`;
+                if (entry && entry.producto) {
+                  const cant   = entry.cantidad ?? 0;
+                  const umbral = entry.umbral   ?? 2;
+                  const critico = cant <= 0;
+                  const bajo    = !critico && cant <= umbral;
+                  celda.classList.add(critico ? "stock-critico" : bajo ? "stock-bajo" : "stock-ok");
+                  textoDiv.innerHTML = `<div style="font-size:5px;overflow:hidden;max-height:14px">${entry.producto.nameProductos || ""}</div><div style="font-size:7px;font-weight:700">${cant}</div>`;
+                  tooltip.innerHTML = `<strong>${entry.producto.nameProductos || ""}</strong><br>${entry.producto.marcaProductos || ""}<br><span style="color:var(--accent)">${fmt(entry.produto ? entry.producto.priceProductos : "")}</span><br>Cant: ${cant} · Umbral: ${umbral}`;
                 } else {
                   textoDiv.textContent = "";
-                  tooltip.textContent = `P${p} · Est.${e} · Niv.${n} · Fil.${f} · Col.${c}`;
+                  tooltip.textContent  = `P${p} · Est.${e} · Niv.${n} · Fil.${f} · Col.${c}`;
                 }
 
                 celda.appendChild(textoDiv);
@@ -1179,51 +1351,75 @@
 
       container.innerHTML = "";
       container.appendChild(dep);
+      verificarAlertas();
     }
 
     function seleccionarCelda(key, el) {
-      // Deseleccionar anterior
       document.querySelectorAll(".celda.seleccionada").forEach(c => c.classList.remove("seleccionada"));
       el.classList.add("seleccionada");
       celdaActual = key;
-
       const parts = key.split("-");
-      const prod  = stockData[key];
-
+      const entry = stockData[key];
       document.getElementById("pos-seleccionada").textContent =
         `${parts[0]} · ${parts[1]} · Nivel ${parts[2].replace("N","")} · Fila ${parts[3].replace("F","")} · Col. ${parts[4].replace("C","")}`;
-
       document.getElementById("btn-asignar").disabled = !productoStock;
-      actualizarPanelInfo(key, prod);
+      document.getElementById("inp-cantidad").value = entry?.cantidad ?? 0;
+      document.getElementById("inp-umbral").value   = entry?.umbral   ?? 2;
+      actualizarPanelInfo(key, entry);
     }
 
-    function actualizarPanelInfo(key, prod) {
+    function actualizarPanelInfo(key, entry) {
       const panel = document.getElementById("panel-info");
       const info  = document.getElementById("info-celda");
       if (!key) { panel.style.display = "none"; return; }
-
       panel.style.display = "block";
+      const prod = entry?.producto;
       if (prod) {
+        const cant   = entry.cantidad ?? 0;
+        const umbral = entry.umbral   ?? 2;
+        const color  = cant <= 0 ? "var(--danger)" : cant <= umbral ? "#ff8c00" : "var(--accent2)";
         info.innerHTML = `
           <div><span style="color:var(--muted)">Producto:</span> ${prod.nameProductos || "—"}</div>
           <div><span style="color:var(--muted)">Marca:</span> ${prod.marcaProductos || "—"}</div>
           <div><span style="color:var(--muted)">Precio:</span> <span style="color:var(--accent)">${fmt(prod.priceProductos)}</span></div>
-          <div><span style="color:var(--muted)">Código:</span> ${prod.codigoBarraProductos || "—"}</div>
+          <div><span style="color:var(--muted)">Stock:</span> <span style="color:${color};font-weight:700">${cant} uds</span></div>
+          <div><span style="color:var(--muted)">Umbral:</span> ${umbral} uds</div>
         `;
       } else {
-        info.innerHTML = `<span style="color:var(--muted)">Celda vacía</span>`;
+        info.innerHTML = `<span style="color:var(--muted)">Celda vacía — asigna un producto primero</span>`;
       }
+    }
+
+    function guardarStockCelda() {
+      if (!celdaActual) return;
+      const entry = stockData[celdaActual];
+      if (!entry || !entry.producto) { alert("Asigna un producto a esta celda primero."); return; }
+      entry.cantidad = parseInt(document.getElementById("inp-cantidad").value) || 0;
+      entry.umbral   = parseInt(document.getElementById("inp-umbral").value)   ?? 2;
+      const key = celdaActual;
+      generarDeposito();
+      celdaActual = key;
+      const el = document.querySelector(`.celda[data-key="${key}"]`);
+      if (el) { el.classList.add("seleccionada"); }
+      document.getElementById("inp-cantidad").value = entry.cantidad;
+      document.getElementById("inp-umbral").value   = entry.umbral;
+      actualizarPanelInfo(key, stockData[key]);
     }
 
     function asignarProducto() {
       if (!celdaActual || !productoStock) return;
-      stockData[celdaActual] = productoStock;
-      generarDeposito(); // re-renderizar
-      // re-seleccionar la misma celda visualmente
-      const el = document.querySelector(`.celda[data-key="${celdaActual}"]`);
-      if (el) { el.classList.add("seleccionada"); actualizarPanelInfo(celdaActual, productoStock); }
+      const prev = stockData[celdaActual] || {};
+      stockData[celdaActual] = { producto: productoStock, cantidad: prev.cantidad ?? 0, umbral: prev.umbral ?? 2 };
+      const key = celdaActual;
+      generarDeposito();
+      celdaActual = key;
+      const el = document.querySelector(`.celda[data-key="${key}"]`);
+      if (el) { el.classList.add("seleccionada"); }
+      document.getElementById("inp-cantidad").value = stockData[key].cantidad;
+      document.getElementById("inp-umbral").value   = stockData[key].umbral;
+      actualizarPanelInfo(key, stockData[key]);
       document.getElementById("pos-seleccionada").textContent = "Seleccioná otra celda →";
-      celdaActual = null;
+      celdaActual = key;
       productoStock = null;
       document.getElementById("asignar-search").value = "";
       document.getElementById("asignar-results").innerHTML = "";
@@ -1237,6 +1433,49 @@
       celdaActual = null;
       actualizarPanelInfo();
       document.getElementById("pos-seleccionada").textContent = "Seleccioná una celda en el mapa →";
+      document.getElementById("panel-info").style.display = "none";
+    }
+
+    // ── ALERTAS GLOBALES ─────────────────────────────────
+    function verificarAlertas() {
+      const alertas = [];
+      for (const [key, entry] of Object.entries(stockData)) {
+        if (!entry?.producto) continue;
+        const cant   = entry.cantidad ?? 0;
+        const umbral = entry.umbral   ?? 2;
+        if (cant <= umbral) {
+          const critico = cant <= 0;
+          const parts   = key.split("-");
+          alertas.push({ nombre: entry.producto.nameProductos || "—", marca: entry.producto.marcaProductos || "", cant, umbral, critico,
+            ubicacion: `${parts[0]}·${parts[1]}·N${parts[2].replace("N","")}·F${parts[3].replace("F","")}·C${parts[4].replace("C","")}` });
+        }
+      }
+      const bar   = document.getElementById("alerta-bar");
+      const lista = document.getElementById("alerta-lista");
+      const count = document.getElementById("alerta-count");
+      if (alertas.length === 0) {
+        bar.classList.remove("show");
+        document.body.classList.remove("tiene-alerta");
+        return;
+      }
+      bar.classList.add("show");
+      document.body.classList.add("tiene-alerta");
+      count.textContent = alertas.length;
+      lista.innerHTML = alertas.map(a => `
+        <div class="alerta-item">
+          <div>
+            <div class="alerta-item-nombre">${a.nombre}</div>
+            <div class="alerta-item-info">${a.marca} · ${a.ubicacion}</div>
+          </div>
+          <span class="${a.critico ? "alerta-badge-critico" : "alerta-badge-bajo"}">
+            ${a.critico ? (a.cant < 0 ? "NEGATIVO " + a.cant : "SIN STOCK") : "BAJO " + a.cant}
+          </span>
+        </div>
+      `).join("");
+    }
+
+    function toggleAlertas() {
+      document.getElementById("alerta-bar").classList.toggle("expandido");
     }
 
     // Búsqueda de productos para asignar
