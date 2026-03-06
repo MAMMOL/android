@@ -470,7 +470,95 @@
       line-height: 1.7;
     }
 
-    /* ── ANIMACIONES ── */
+    .btn-imprimir {
+      background: var(--accent);
+      border: none;
+      border-radius: var(--radius);
+      color: #0a0a0f;
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: .72rem;
+      padding: 7px 14px;
+      cursor: pointer;
+      letter-spacing: 1px;
+      transition: opacity .2s;
+    }
+    .btn-imprimir:hover { opacity: .85; }
+
+    /* ── ETIQUETA IMPRESIÓN ── */
+    @media print {
+      body > * { display: none !important; }
+      #etiqueta-print { display: flex !important; }
+    }
+
+    #etiqueta-print {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      background: white;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .etiqueta {
+      width: 5cm;
+      height: 3cm;
+      background: white;
+      color: black;
+      border: 1.5px solid #000;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      padding: 3px 5px 4px;
+      font-family: Arial, sans-serif;
+      overflow: hidden;
+    }
+
+    .etiqueta-nombre {
+      font-size: 7pt;
+      font-weight: bold;
+      text-align: center;
+      line-height: 1.2;
+      max-height: 18pt;
+      overflow: hidden;
+      width: 100%;
+    }
+
+    .etiqueta-marca {
+      font-size: 6pt;
+      color: #444;
+      text-align: center;
+      width: 100%;
+    }
+
+    .etiqueta-precio {
+      font-size: 28pt;
+      font-weight: 900;
+      line-height: 1;
+      text-align: center;
+      letter-spacing: -1px;
+    }
+
+    .etiqueta-barcode {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1px;
+    }
+
+    .etiqueta-barcode svg {
+      width: 100%;
+      height: 18pt;
+    }
+
+    .etiqueta-codigo-text {
+      font-size: 5.5pt;
+      letter-spacing: 1px;
+      color: #000;
+    }
     @keyframes fadeUp {
       from { opacity: 0; transform: translateY(10px); }
       to   { opacity: 1; transform: translateY(0); }
@@ -535,10 +623,18 @@
           <div class="modal-title" id="modal-title"></div>
           <div class="modal-marca" id="modal-marca"></div>
         </div>
-        <button class="btn-close" id="btn-close">✕</button>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button class="btn-imprimir" id="btn-imprimir" onclick="imprimirEtiqueta()">🖨 ETIQUETA</button>
+          <button class="btn-close" id="btn-close">✕</button>
+        </div>
       </div>
       <div class="modal-body" id="modal-body"></div>
     </div>
+  </div>
+
+  <!-- ══════════════ ETIQUETA PRINT ══════════════ -->
+  <div id="etiqueta-print">
+    <div class="etiqueta" id="etiqueta-contenido"></div>
   </div>
 
   <script>
@@ -704,6 +800,7 @@
     function showModal(i) {
       const p = allProductos[i];
       if (!p) return;
+      productoActual = p;
 
       document.getElementById("modal-title").textContent = p.nameProductos || "—";
       document.getElementById("modal-marca").textContent = p.marcaProductos || "";
@@ -765,6 +862,66 @@
 
     function closeModal() {
       document.getElementById("modal-overlay").classList.remove("show");
+    }
+
+    // ── IMPRIMIR ETIQUETA ─────────────────────────────────
+    let productoActual = null;
+
+    function imprimirEtiqueta() {
+      if (!productoActual) return;
+      const p = productoActual;
+
+      const nombre  = (p.nameProductos || "").toUpperCase();
+      const marca   = (p.marcaProductos || "").toUpperCase();
+      const precio  = fmtNum(p.priceProductos);
+      const codigo  = p.codigoBarraProductos || "";
+
+      document.getElementById("etiqueta-contenido").innerHTML = `
+        <div class="etiqueta-nombre">${nombre}</div>
+        <div class="etiqueta-marca">${marca}</div>
+        <div class="etiqueta-precio">$${precio}</div>
+        <div class="etiqueta-barcode">
+          ${codigo ? generarBarcode(codigo) : ""}
+          <div class="etiqueta-codigo-text">${codigo}</div>
+        </div>
+      `;
+
+      document.getElementById("etiqueta-print").style.display = "flex";
+      setTimeout(() => {
+        window.print();
+        document.getElementById("etiqueta-print").style.display = "none";
+      }, 200);
+    }
+
+    // Generador de código de barras Code128 simplificado en SVG
+    function generarBarcode(texto) {
+      // Barras decorativas basadas en el texto (representación visual)
+      const chars = texto.split("");
+      let barras = "10110010"; // start
+      chars.forEach(c => {
+        const code = c.charCodeAt(0);
+        barras += (code).toString(2).padStart(8, "0");
+      });
+      barras += "1100011101011"; // stop
+
+      const anchoBar = 1.2;
+      let x = 0;
+      let svgBars = "";
+      for (let i = 0; i < barras.length; i++) {
+        if (barras[i] === "1") {
+          svgBars += `<rect x="${x.toFixed(1)}" y="0" width="${anchoBar}" height="100%" fill="black"/>`;
+        }
+        x += anchoBar;
+      }
+      const totalAncho = x;
+      return `<svg viewBox="0 0 ${totalAncho} 20" preserveAspectRatio="none">${svgBars}</svg>`;
+    }
+
+    function fmtNum(val) {
+      if (val == null || val === "") return "—";
+      const n = parseFloat(val);
+      if (isNaN(n)) return val;
+      return n.toLocaleString("es-AR", { minimumFractionDigits: 0, maximumFractionDigits: 0 });
     }
 
     // ── HELPERS ──────────────────────────────────────────
