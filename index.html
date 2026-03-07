@@ -687,6 +687,70 @@
     .leyenda-item { display: flex; align-items: center; gap: 6px; }
     .leyenda-box { width: 12px; height: 12px; border-radius: 2px; border: 1px solid; }
 
+    /* ── PESTAÑAS STOCK ── */
+    .stock-tabs { display: flex; gap: 4px; }
+    .stock-tab {
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--muted);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .7rem;
+      padding: 6px 14px;
+      cursor: pointer;
+      letter-spacing: 1px;
+      transition: all .2s;
+      position: relative;
+    }
+    .stock-tab:hover { border-color: var(--accent2); color: var(--accent2); }
+    .stock-tab.active { background: var(--accent2); border-color: var(--accent2); color: #0a0a0f; font-weight: 700; }
+    .tab-badge {
+      background: var(--danger);
+      color: white;
+      border-radius: 20px;
+      padding: 1px 6px;
+      font-size: .6rem;
+      font-weight: 700;
+      margin-left: 4px;
+    }
+    .stock-tab.active .tab-badge { background: #0a0a0f; color: var(--danger); }
+
+    /* ── TABLA ALERTAS / INVENTARIO ── */
+    .visor-table { width: 100%; border-collapse: collapse; font-size: .82rem; }
+    .visor-table thead tr { border-bottom: 2px solid var(--border); }
+    .visor-table thead th {
+      text-align: left; padding: 10px 14px;
+      font-size: .62rem; letter-spacing: 2px; text-transform: uppercase;
+      color: var(--muted); font-weight: 500; white-space: nowrap;
+    }
+    .visor-table tbody tr { border-bottom: 1px solid var(--border); transition: background .12s; }
+    .visor-table tbody tr:hover { background: var(--bg3); }
+    .visor-table tbody td { padding: 12px 14px; vertical-align: middle; }
+    .visor-table .td-nombre { font-family: 'Syne',sans-serif; font-weight: 600; }
+    .cant-input {
+      width: 70px; background: var(--bg3); border: 1px solid var(--border);
+      border-radius: 4px; color: var(--text); font-family: 'JetBrains Mono',monospace;
+      font-size: .85rem; padding: 5px 8px; outline: none; text-align: center;
+      transition: border-color .2s;
+    }
+    .cant-input:focus { border-color: var(--accent); }
+    .umbral-input {
+      width: 60px; background: var(--bg3); border: 1px solid var(--border);
+      border-radius: 4px; color: var(--text); font-family: 'JetBrains Mono',monospace;
+      font-size: .85rem; padding: 5px 8px; outline: none; text-align: center;
+      transition: border-color .2s;
+    }
+    .umbral-input:focus { border-color: var(--accent2); }
+    .btn-guardar-inv {
+      background: var(--accent); border: none; border-radius: 4px;
+      color: #0a0a0f; font-family: 'Syne',sans-serif; font-weight: 700;
+      font-size: .7rem; padding: 5px 10px; cursor: pointer; transition: opacity .2s;
+    }
+    .btn-guardar-inv:hover { opacity: .85; }
+    .badge-critico { background: var(--danger); color: white; border-radius: 4px; padding: 2px 8px; font-size: .68rem; font-weight: 700; }
+    .badge-bajo { background: #ff8c00; color: #0a0a0f; border-radius: 4px; padding: 2px 8px; font-size: .68rem; font-weight: 700; }
+    .badge-ok { background: #1a4a20; color: var(--accent2); border-radius: 4px; padding: 2px 8px; font-size: .68rem; font-weight: 700; }
+
     /* ── CONTROLES ESTANTE ── */
     .ctrl-btn {
       background: none;
@@ -931,7 +995,16 @@
   <!-- ══════════════ STOCK ══════════════ -->
   <div id="screen-stock" class="screen">
     <div class="stock-topbar">
-      <div class="stock-topbar-title">📦 MÓDULO DE STOCK</div>
+      <div style="display:flex;align-items:center;gap:20px">
+        <div class="stock-topbar-title">📦 STOCK</div>
+        <div class="stock-tabs">
+          <button class="stock-tab active" id="tab-deposito" onclick="switchTab('deposito')">DEPÓSITO</button>
+          <button class="stock-tab" id="tab-alertas" onclick="switchTab('alertas')">
+            ALERTAS <span class="tab-badge" id="tab-badge">0</span>
+          </button>
+          <button class="stock-tab" id="tab-inventario" onclick="switchTab('inventario')">INVENTARIO</button>
+        </div>
+      </div>
       <button class="btn-back-app" id="btn-back-app">← VOLVER</button>
     </div>
     <div class="stock-layout">
@@ -1031,6 +1104,26 @@
         </div>
       </div>
     </div>
+
+    <!-- ── PESTAÑA ALERTAS ── -->
+    <div id="tab-alertas-content" class="tab-content" style="display:none;flex:1;overflow-y:auto;padding:24px 32px">
+      <div style="font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:700;color:var(--danger);margin-bottom:20px;letter-spacing:-0.5px">
+        ⚠ PRODUCTOS CON STOCK BAJO O CRÍTICO
+      </div>
+      <div id="alertas-tabla"></div>
+    </div>
+
+    <!-- ── PESTAÑA INVENTARIO ── -->
+    <div id="tab-inventario-content" class="tab-content" style="display:none;flex:1;overflow-y:auto;padding:24px 32px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+        <div style="font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:700;color:var(--accent2);letter-spacing:-0.5px">
+          📋 INVENTARIO COMPLETO
+        </div>
+        <input id="inv-search" type="search" placeholder="Filtrar..." style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-family:'JetBrains Mono',monospace;font-size:.8rem;padding:7px 12px;outline:none;width:200px" oninput="renderInventario()" />
+      </div>
+      <div id="inventario-tabla"></div>
+    </div>
+
   </div>
 
   <!-- ══════════════ ETIQUETA PRINT ══════════════ -->
@@ -1263,6 +1356,158 @@
 
     function closeModal() {
       document.getElementById("modal-overlay").classList.remove("show");
+    }
+
+
+    // ── PESTAÑAS ──────────────────────────────────────────
+    function switchTab(tab) {
+      document.querySelectorAll(".stock-tab").forEach(t => t.classList.remove("active"));
+      document.querySelector(".stock-layout").style.display = "none";
+      document.getElementById("tab-alertas-content").style.display   = "none";
+      document.getElementById("tab-inventario-content").style.display = "none";
+      document.getElementById(`tab-${tab}`).classList.add("active");
+      if (tab === "deposito") {
+        document.querySelector(".stock-layout").style.display = "grid";
+      } else if (tab === "alertas") {
+        document.getElementById("tab-alertas-content").style.display = "flex";
+        renderAlertas();
+      } else if (tab === "inventario") {
+        document.getElementById("tab-inventario-content").style.display = "flex";
+        renderInventario();
+      }
+    }
+
+    function renderAlertas() {
+      const cont = document.getElementById("alertas-tabla");
+      const rows = [];
+      for (const [key, entry] of Object.entries(stockData)) {
+        if (!entry?.producto) continue;
+        const cant   = entry.cantidad ?? 0;
+        const umbral = entry.umbral   ?? 2;
+        if (cant <= umbral) rows.push({ key, entry, cant, umbral });
+      }
+      rows.sort((a,b) => a.cant - b.cant);
+
+      // Actualizar badge de la pestaña
+      document.getElementById("tab-badge").textContent = rows.length;
+
+      if (rows.length === 0) {
+        const totalAsignados = Object.values(stockData).filter(e => e?.producto).length;
+        if (totalAsignados === 0) {
+          cont.innerHTML = `
+            <div style="text-align:center;padding:60px 20px">
+              <div style="font-size:2.5rem;margin-bottom:16px">📦</div>
+              <div style="color:var(--muted);font-size:.85rem;letter-spacing:2px;margin-bottom:8px">NO HAY PRODUCTOS ASIGNADOS</div>
+              <div style="color:var(--muted);font-size:.75rem">Andá al DEPÓSITO, seleccioná una celda,<br>asigná un producto y cargá la cantidad.</div>
+            </div>`;
+        } else {
+          cont.innerHTML = `
+            <div style="text-align:center;padding:60px 20px">
+              <div style="font-size:2.5rem;margin-bottom:16px">✅</div>
+              <div style="color:var(--accent2);font-size:.9rem;font-weight:700;letter-spacing:1px">TODO EL STOCK ESTÁ OK</div>
+              <div style="color:var(--muted);font-size:.75rem;margin-top:8px">${totalAsignados} producto${totalAsignados!==1?"s":""} en depósito, ninguno bajo umbral.</div>
+            </div>`;
+        }
+        return;
+      }
+
+      cont.innerHTML = `
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;flex-wrap:wrap">
+          <div style="color:var(--danger);font-size:.8rem;letter-spacing:1px">
+            ${rows.filter(r=>r.cant<=0).length > 0
+              ? `<span class="badge-critico">${rows.filter(r=>r.cant<=0).length} SIN STOCK / NEGATIVOS</span>`
+              : ""}
+          </div>
+          <div>
+            ${rows.filter(r=>r.cant>0).length > 0
+              ? `<span class="badge-bajo">${rows.filter(r=>r.cant>0).length} STOCK BAJO</span>`
+              : ""}
+          </div>
+          <div style="color:var(--muted);font-size:.72rem;margin-left:auto">Editá cantidad y umbral · presioná GUARDAR para confirmar</div>
+        </div>
+        <table class="visor-table"><thead><tr>
+          <th>Producto</th><th>Marca</th><th>Ubicación</th>
+          <th>Cantidad</th><th>Alerta si ≤</th><th>Estado</th><th></th>
+        </tr></thead><tbody>
+        ${rows.map(({key, entry, cant, umbral}) => {
+          const prod = entry.producto;
+          const critico = cant <= 0;
+          const parts = key.split("-");
+          const estInfo = estantesList.find(e => "E"+e.id === parts[0]);
+          const ubic = estInfo
+            ? `P${estInfo.pasillo} · Est.${estInfo.id} · N${parts[1].replace("N","")} F${parts[2].replace("F","")} C${parts[3].replace("C","")}`
+            : key;
+          return `<tr style="${critico?"background:#1a0808":""}">
+            <td class="td-nombre">${prod.nameProductos||"—"}</td>
+            <td style="color:var(--muted);font-size:.78rem">${prod.marcaProductos||"—"}</td>
+            <td style="font-size:.72rem;color:var(--muted)">${ubic}</td>
+            <td><input class="cant-input" type="number" value="${cant}" data-key="${key}" data-field="cantidad" onchange="actualizarDesdeTabla(this)" style="${critico?"border-color:var(--danger)":""}"/></td>
+            <td><input class="umbral-input" type="number" value="${umbral}" data-key="${key}" data-field="umbral" onchange="actualizarDesdeTabla(this)"/></td>
+            <td><span class="${critico?"badge-critico":"badge-bajo"}">${critico?(cant<0?"NEGATIVO":"SIN STOCK"):"BAJO"}</span></td>
+            <td><button class="btn-guardar-inv" onclick="guardarDesdeTabla('${key}')">GUARDAR</button></td>
+          </tr>`;
+        }).join("")}
+        </tbody></table>`;
+    }
+
+    function renderInventario() {
+      const cont = document.getElementById("inventario-tabla");
+      const q    = (document.getElementById("inv-search")?.value||"").toLowerCase().trim();
+      const rows = [];
+      for (const [key, entry] of Object.entries(stockData)) {
+        if (!entry?.producto) continue;
+        const prod = entry.producto;
+        if (q && !(prod.nameProductos||"").toLowerCase().includes(q) &&
+                 !(prod.marcaProductos||"").toLowerCase().includes(q)) continue;
+        rows.push({ key, entry });
+      }
+      rows.sort((a,b) => (a.entry.cantidad??0)-(b.entry.cantidad??0));
+      if (rows.length === 0) {
+        cont.innerHTML = `<div style="color:var(--muted);font-size:.85rem;padding:40px 0;text-align:center;letter-spacing:2px">${q?"SIN RESULTADOS":"NO HAY PRODUCTOS ASIGNADOS AÚN"}</div>`;
+        return;
+      }
+      cont.innerHTML = `<table class="visor-table"><thead><tr>
+          <th>Producto</th><th>Marca</th><th>Precio</th><th>Ubicación</th>
+          <th>Cantidad</th><th>Umbral</th><th>Estado</th><th></th>
+        </tr></thead><tbody>
+        ${rows.map(({key, entry}) => {
+          const prod = entry.producto;
+          const cant = entry.cantidad??0, umbral = entry.umbral??2;
+          const critico = cant<=0, bajo = !critico && cant<=umbral;
+          const parts = key.split("-");
+          const estInfo = estantesList.find(e => "E"+e.id === parts[0]);
+          const ubic = estInfo ? `P${estInfo.pasillo}·Est.${estInfo.id}·N${parts[1].replace("N","")}·F${parts[2].replace("F","")}·C${parts[3].replace("C","")}` : key;
+          const bClass = critico?"badge-critico":bajo?"badge-bajo":"badge-ok";
+          const bText  = critico?(cant<0?"NEGATIVO":"SIN STOCK"):bajo?"BAJO":"OK";
+          return `<tr>
+            <td class="td-nombre">${prod.nameProductos||"—"}</td>
+            <td style="color:var(--muted)">${prod.marcaProductos||"—"}</td>
+            <td style="color:var(--accent)">${fmt(prod.priceProductos)}</td>
+            <td style="font-size:.72rem;color:var(--muted)">${ubic}</td>
+            <td><input class="cant-input" type="number" value="${cant}" data-key="${key}" data-field="cantidad" onchange="actualizarDesdeTabla(this)"/></td>
+            <td><input class="umbral-input" type="number" value="${umbral}" data-key="${key}" data-field="umbral" onchange="actualizarDesdeTabla(this)"/></td>
+            <td><span class="${bClass}">${bText}</span></td>
+            <td><button class="btn-guardar-inv" onclick="guardarDesdeTabla('${key}')">GUARDAR</button></td>
+          </tr>`;
+        }).join("")}
+        </tbody></table>`;
+    }
+
+    function actualizarDesdeTabla(input) {
+      const key = input.dataset.key, field = input.dataset.field;
+      if (stockData[key]) stockData[key][field] = parseInt(input.value)||0;
+    }
+
+    function guardarDesdeTabla(key) {
+      const ci = document.querySelector(`.cant-input[data-key="${key}"]`);
+      const ui = document.querySelector(`.umbral-input[data-key="${key}"]`);
+      if (!stockData[key]) return;
+      if (ci) stockData[key].cantidad = parseInt(ci.value)||0;
+      if (ui) stockData[key].umbral   = parseInt(ui.value)||0;
+      verificarAlertas();
+      const tabActiva = document.querySelector(".stock-tab.active")?.id;
+      if (tabActiva==="tab-alertas")    renderAlertas();
+      if (tabActiva==="tab-inventario") renderInventario();
     }
 
     // ── STOCK ─────────────────────────────────────────────
@@ -1618,13 +1863,20 @@
         if (cant <= umbral) {
           const critico = cant <= 0;
           const parts   = key.split("-");
-          alertas.push({ nombre: entry.producto.nameProductos || "—", marca: entry.producto.marcaProductos || "", cant, umbral, critico,
-            ubicacion: `${parts[0]}·${parts[1]}·N${parts[2].replace("N","")}·F${parts[3].replace("F","")}·C${parts[4].replace("C","")}` });
+          const estInfo = estantesList.find(e => "E"+e.id === parts[0]);
+          const ubic    = estInfo
+            ? `P${estInfo.pasillo}·Est.${estInfo.id}·N${parts[1].replace("N","")}·F${parts[2].replace("F","")}·C${parts[3].replace("C","")}`
+            : key;
+          alertas.push({ nombre: entry.producto.nameProductos || "—", marca: entry.producto.marcaProductos || "", cant, umbral, critico, ubicacion: ubic });
         }
       }
+
       const bar   = document.getElementById("alerta-bar");
       const lista = document.getElementById("alerta-lista");
       const count = document.getElementById("alerta-count");
+      // Badge de la pestaña
+      document.getElementById("tab-badge").textContent = alertas.length;
+
       if (alertas.length === 0) {
         bar.classList.remove("show");
         document.body.classList.remove("tiene-alerta");
