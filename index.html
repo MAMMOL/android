@@ -1225,8 +1225,18 @@
       container.innerHTML = '<div class="loading"><div class="spinner"></div>CARGANDO</div>';
 
       try {
-        const res = await fetch(`${API}/productos`, {
+
+
+        
+      /*  const res = await fetch(`${API}/productos`, {
           headers: { Authorization: `Bearer ${token}` },
+*/
+
+          const res = await fetch(`${API}/productos?t=${Date.now()}`, {
+  headers: { Authorization: `Bearer ${token}` },
+  cache: "no-store"
+});
+          
         });
 
         if (res.status === 401) {
