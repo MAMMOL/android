@@ -578,6 +578,75 @@
     }
     .btn-stock:hover { background: var(--accent2); color: #0a0a0f; }
 
+    .btn-nuevo-producto {
+      background: var(--accent);
+      border: none;
+      border-radius: var(--radius);
+      color: #0a0a0f;
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: .72rem;
+      padding: 7px 14px;
+      cursor: pointer;
+      letter-spacing: 1px;
+      transition: opacity .2s;
+    }
+    .btn-nuevo-producto:hover { opacity: .85; }
+
+    /* ── MODAL EDITAR PRECIOS ── */
+    .edit-field { margin-bottom: 14px; }
+    .edit-field label {
+      display: block;
+      font-size: .62rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 7px;
+    }
+    .edit-field input {
+      width: 100%;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .95rem;
+      padding: 12px 14px;
+      outline: none;
+      transition: border-color .2s;
+    }
+    .edit-field input:focus { border-color: var(--accent); }
+    .edit-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    .btn-save-edit {
+      width: 100%;
+      margin-top: 4px;
+      padding: 14px;
+      background: var(--accent);
+      color: #0a0a0f;
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: .9rem;
+      letter-spacing: 1px;
+      border: none;
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: opacity .2s, transform .1s;
+    }
+    .btn-save-edit:hover { opacity: .9; }
+    .btn-save-edit:active { transform: scale(.98); }
+    .btn-save-edit:disabled { opacity: .5; cursor: not-allowed; }
+
+    .modal-feedback {
+      margin-top: 12px;
+      padding: 10px 14px;
+      border-radius: var(--radius);
+      font-size: .8rem;
+      display: none;
+    }
+    .modal-feedback.ok  { display: block; background: #0d2a10; border: 1px solid #2a6a30; color: var(--accent2); }
+    .modal-feedback.err { display: block; background: #2a1018; border: 1px solid #5a2030; color: var(--danger); }
+
     /* ══════════════ STOCK ══════════════ */
     #screen-stock { background: var(--bg); }
     .stock-topbar {
@@ -913,7 +982,7 @@
     /* leyenda extra */
       from { opacity: 0; transform: translateY(10px); }
       to   { opacity: 1; transform: translateY(0); }
-    }
+    
     @keyframes spin { to { transform: rotate(360deg); } }
   </style>
 </head>
@@ -959,6 +1028,7 @@
         <div class="topbar-user" id="topbar-user"></div>
       </div>
       <div style="display:flex;gap:8px">
+        <button class="btn-nuevo-producto" id="btn-nuevo-producto">+ NUEVO</button>
         <button class="btn-stock" id="btn-stock">📦 STOCK</button>
         <button class="btn-logout" id="btn-logout">SALIR</button>
       </div>
@@ -991,6 +1061,7 @@
         </div>
         <div style="display:flex;gap:8px;align-items:center">
           <button class="btn-imprimir" id="btn-imprimir" onclick="imprimirEtiqueta()">🖨 ETIQUETA</button>
+          <button class="btn-imprimir" id="btn-editar-producto" onclick="openEditModal()" style="background:var(--bg3);border:1px solid var(--accent);color:var(--accent);">✏️ EDITAR</button>
           <button class="btn-close" id="btn-close">✕</button>
         </div>
       </div>
@@ -1135,6 +1206,110 @@
   <!-- ══════════════ ETIQUETA PRINT ══════════════ -->
   <div id="etiqueta-print">
     <div class="etiqueta" id="etiqueta-contenido"></div>
+  </div>
+
+  <!-- ══════════════ MODAL EDITAR PRECIOS ══════════════ -->
+  <div class="modal-overlay" id="modal-edit-overlay">
+    <div class="modal" style="max-width:460px">
+      <div class="modal-header">
+        <div>
+          <div class="modal-title">Editar producto</div>
+          <div class="modal-marca" id="edit-modal-subtitle"></div>
+        </div>
+        <button class="btn-close" id="btn-close-edit">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="edit-row-2">
+          <div class="edit-field">
+            <label>Costo</label>
+            <input id="edit-costo" type="number" step="0.01" min="0" placeholder="0.00" />
+          </div>
+          <div class="edit-field">
+            <label>Margen %</label>
+            <input id="edit-margen" type="number" step="0.1" min="0" placeholder="0" />
+          </div>
+        </div>
+        <div class="edit-row-2">
+          <div class="edit-field">
+            <label>Precio venta</label>
+            <input id="edit-precio" type="number" step="0.01" min="0" placeholder="0.00" />
+          </div>
+          <div class="edit-field">
+            <label>Precio bonificado</label>
+            <input id="edit-bonif" type="number" step="0.01" min="0" placeholder="0.00" />
+          </div>
+        </div>
+        <button class="btn-save-edit" id="btn-save-edit" onclick="guardarEdicion()">GUARDAR CAMBIOS</button>
+        <div class="modal-feedback" id="edit-feedback"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════ MODAL CREAR PRODUCTO ══════════════ -->
+  <div class="modal-overlay" id="modal-crear-overlay">
+    <div class="modal" style="max-width:520px">
+      <div class="modal-header">
+        <div>
+          <div class="modal-title">Nuevo producto</div>
+          <div class="modal-marca">Completá los datos del producto</div>
+        </div>
+        <button class="btn-close" id="btn-close-crear">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="edit-row-2">
+          <div class="edit-field" style="grid-column:1/-1">
+            <label>Nombre</label>
+            <input id="crear-nombre" type="text" placeholder="Nombre del producto" />
+          </div>
+        </div>
+        <div class="edit-row-2">
+          <div class="edit-field">
+            <label>Marca</label>
+            <input id="crear-marca" type="text" placeholder="Marca" />
+          </div>
+          <div class="edit-field">
+            <label>Código de barra</label>
+            <input id="crear-codigo" type="text" placeholder="7790001234567" />
+          </div>
+        </div>
+        <div class="edit-field">
+          <label>Descripción</label>
+          <input id="crear-desc" type="text" placeholder="Descripción opcional" />
+        </div>
+        <div class="edit-row-2">
+          <div class="edit-field">
+            <label>Costo</label>
+            <input id="crear-costo" type="number" step="0.01" min="0" placeholder="0.00" />
+          </div>
+          <div class="edit-field">
+            <label>Margen %</label>
+            <input id="crear-margen" type="number" step="0.1" min="0" placeholder="0" />
+          </div>
+        </div>
+        <div class="edit-row-2">
+          <div class="edit-field">
+            <label>Precio venta</label>
+            <input id="crear-precio" type="number" step="0.01" min="0" placeholder="0.00" />
+          </div>
+          <div class="edit-field">
+            <label>Precio bonificado</label>
+            <input id="crear-bonif" type="number" step="0.01" min="0" placeholder="0.00" />
+          </div>
+        </div>
+        <div class="edit-row-2">
+          <div class="edit-field">
+            <label>Unidad de medida</label>
+            <input id="crear-unidad" type="text" placeholder="unidad / kg / lt..." />
+          </div>
+          <div class="edit-field">
+            <label>Empresa</label>
+            <input id="crear-empresa" type="text" placeholder="Nombre exacto de la empresa" />
+          </div>
+        </div>
+        <button class="btn-save-edit" id="btn-save-crear" onclick="guardarNuevoProducto()">CREAR PRODUCTO</button>
+        <div class="modal-feedback" id="crear-feedback"></div>
+      </div>
+    </div>
   </div>
 
   <script>
@@ -2014,8 +2189,190 @@
       return "$" + n.toLocaleString("es-AR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
 
+    // ── MODAL EDITAR ──────────────────────────────────────
+    function openEditModal() {
+      if (!productoActual) return;
+      const p = productoActual;
+      document.getElementById("edit-modal-subtitle").textContent =
+        `${p.nameProductos || ""}  ·  ${p.marcaProductos || ""}`;
+      document.getElementById("edit-costo").value   = p.costeProductos   ?? "";
+      document.getElementById("edit-margen").value  = p.margenVentaUtilidadProductos ?? "";
+      document.getElementById("edit-precio").value  = p.priceProductos   ?? "";
+      document.getElementById("edit-bonif").value   = p.precioVentaBonificadoFinalProductos ?? "";
+      setFeedback("edit-feedback", "", "");
+      document.getElementById("modal-edit-overlay").classList.add("show");
+    }
+
+    document.getElementById("btn-close-edit").addEventListener("click", () => {
+      document.getElementById("modal-edit-overlay").classList.remove("show");
+    });
+    document.getElementById("modal-edit-overlay").addEventListener("click", e => {
+      if (e.target === document.getElementById("modal-edit-overlay"))
+        document.getElementById("modal-edit-overlay").classList.remove("show");
+    });
+
+    async function guardarEdicion() {
+      const p = productoActual;
+      if (!p) return;
+
+      const precio  = parseFloat(document.getElementById("edit-precio").value);
+      const bonif   = parseFloat(document.getElementById("edit-bonif").value);
+      const costo   = parseFloat(document.getElementById("edit-costo").value);
+      const margen  = parseFloat(document.getElementById("edit-margen").value);
+
+      if (isNaN(precio) || isNaN(bonif) || isNaN(costo) || isNaN(margen)) {
+        setFeedback("edit-feedback", "Completá todos los campos numéricos.", "err");
+        return;
+      }
+
+      const btn = document.getElementById("btn-save-edit");
+      btn.disabled = true;
+      btn.textContent = "GUARDANDO...";
+      setFeedback("edit-feedback", "", "");
+
+      try {
+        const body = {
+          name:                              p.nameProductos,
+          marcaProductos:                    p.marcaProductos,
+          description:                       p.descriptionProductos,
+          codigoBarraProductos:              p.codigoBarraProductos,
+          costeProductos:                    costo,
+          margenVentaUtilidadProductos:      margen,
+          precio:                            precio,
+          unidadDeMedida:                    p.unidadDeMedida,
+          precioVentaBonificadoFinalProductos: bonif,
+        };
+
+        const res = await fetch(`${API}/productos/${p.idProductos}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(body),
+        });
+
+        if (res.ok) {
+          // Actualizar datos locales
+          p.priceProductos                      = precio;
+          p.precioVentaBonificadoFinalProductos = bonif;
+          p.costeProductos                      = costo;
+          p.margenVentaUtilidadProductos        = margen;
+          setFeedback("edit-feedback", "✓ Producto actualizado correctamente.", "ok");
+          // Refrescar el modal de detalle si sigue abierto
+          const idx = allProductos.indexOf(p);
+          if (idx !== -1) showModal(idx);
+        } else {
+          const data = await res.json().catch(() => ({}));
+          setFeedback("edit-feedback", data.error || `Error ${res.status}`, "err");
+        }
+      } catch (err) {
+        setFeedback("edit-feedback", "Error de conexión con el servidor.", "err");
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "GUARDAR CAMBIOS";
+      }
+    }
+
+    // ── MODAL CREAR PRODUCTO ──────────────────────────────
+    document.getElementById("btn-nuevo-producto").addEventListener("click", () => {
+      // Limpiar campos
+      ["crear-nombre","crear-marca","crear-codigo","crear-desc",
+       "crear-costo","crear-margen","crear-precio","crear-bonif",
+       "crear-unidad","crear-empresa"].forEach(id => {
+        document.getElementById(id).value = "";
+      });
+      setFeedback("crear-feedback", "", "");
+      document.getElementById("modal-crear-overlay").classList.add("show");
+    });
+
+    document.getElementById("btn-close-crear").addEventListener("click", () => {
+      document.getElementById("modal-crear-overlay").classList.remove("show");
+    });
+    document.getElementById("modal-crear-overlay").addEventListener("click", e => {
+      if (e.target === document.getElementById("modal-crear-overlay"))
+        document.getElementById("modal-crear-overlay").classList.remove("show");
+    });
+
+    async function guardarNuevoProducto() {
+      const nombre  = document.getElementById("crear-nombre").value.trim();
+      const marca   = document.getElementById("crear-marca").value.trim();
+      const codigo  = document.getElementById("crear-codigo").value.trim();
+      const desc    = document.getElementById("crear-desc").value.trim();
+      const costo   = parseFloat(document.getElementById("crear-costo").value);
+      const margen  = parseFloat(document.getElementById("crear-margen").value);
+      const precio  = parseFloat(document.getElementById("crear-precio").value);
+      const bonif   = parseFloat(document.getElementById("crear-bonif").value);
+      const unidad  = document.getElementById("crear-unidad").value.trim();
+      const empresa = document.getElementById("crear-empresa").value.trim();
+
+      if (!nombre || !marca || !codigo || !unidad || !empresa) {
+        setFeedback("crear-feedback", "Completá al menos: nombre, marca, código, unidad y empresa.", "err");
+        return;
+      }
+      if (isNaN(costo) || isNaN(margen) || isNaN(precio) || isNaN(bonif)) {
+        setFeedback("crear-feedback", "Los campos numéricos deben tener valores válidos.", "err");
+        return;
+      }
+
+      const btn = document.getElementById("btn-save-crear");
+      btn.disabled = true;
+      btn.textContent = "CREANDO...";
+      setFeedback("crear-feedback", "", "");
+
+      try {
+        const body = {
+          name:                              nombre,
+          marcaProductos:                    marca,
+          description:                       desc,
+          codigoBarraProductos:              codigo,
+          costeProductos:                    costo,
+          margenVentaUtilidadProductos:      margen,
+          precio:                            precio,
+          unidadDeMedida:                    unidad,
+          precioVentaBonificadoFinalProductos: bonif,
+          empresa:                           empresa,
+        };
+
+        const res = await fetch(`${API}/productos`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(body),
+        });
+
+        if (res.ok) {
+          const nuevo = await res.json();
+          allProductos.unshift(nuevo);
+          renderTabla(allProductos);
+          setFeedback("crear-feedback", "✓ Producto creado correctamente.", "ok");
+          // Cerrar modal luego de 1.5s
+          setTimeout(() => {
+            document.getElementById("modal-crear-overlay").classList.remove("show");
+          }, 1500);
+        } else {
+          const data = await res.json().catch(() => ({}));
+          setFeedback("crear-feedback", data.error || `Error ${res.status}`, "err");
+        }
+      } catch (err) {
+        setFeedback("crear-feedback", "Error de conexión con el servidor.", "err");
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "CREAR PRODUCTO";
+      }
+    }
+
+    function setFeedback(id, msg, type) {
+      const el = document.getElementById(id);
+      el.textContent = msg;
+      el.className = "modal-feedback" + (type ? " " + type : "");
+    }
+
     // ── INIT ─────────────────────────────────────────────
     if (token && username) enterApp();
   </script>
 </body>
 </html>
+
