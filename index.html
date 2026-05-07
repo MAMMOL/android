@@ -1862,6 +1862,7 @@
 
     let token    = localStorage.getItem("mamoll_token") || null;
     let username = localStorage.getItem("mamoll_user")  || null;
+    let correoUsuario = localStorage.getItem("mamoll_email") || null;
     let allProductos = [];
     let empresaUsuario = "";
 
@@ -1905,8 +1906,10 @@
 
         token    = data.token;
         username = user;
+        correoUsuario = data.email || data.correo || data.correoUsuario || (user + "@mamoll.com");
         localStorage.setItem("mamoll_token", token);
         localStorage.setItem("mamoll_user", username);
+        localStorage.setItem("mamoll_email", correoUsuario);
         enterApp();
 
       } catch {
@@ -1936,9 +1939,10 @@
 
     // ── LOGOUT ───────────────────────────────────────────
     document.getElementById("btn-logout").addEventListener("click", () => {
-      token = null; username = null; allProductos = [];
+      token = null; username = null; correoUsuario = null; allProductos = [];
       localStorage.removeItem("mamoll_token");
       localStorage.removeItem("mamoll_user");
+      localStorage.removeItem("mamoll_email");
       document.getElementById("inp-pass").value = "";
       document.getElementById("login-error").classList.remove("show");
       showScreen("screen-login");
@@ -2259,7 +2263,7 @@
           return `<tr>
             <td class="td-nombre">${prod.nameProductos||"—"}</td>
             <td style="color:var(--muted)">${prod.marcaProductos||"—"}</td>
-            <td style="color:var(--brand);font-weight:600">${fmt(prod.priceProductos)}</td>
+            <td style="color:var(--brand);font-weight:600">${fmt(parseFloat(prod.priceProductos ?? prod.precio ?? 0) || 0)}</td>
             <td style="font-size:.72rem;color:var(--muted)">${ubic}</td>
             <td><input class="cant-input" type="number" value="${cant}" data-key="${key}" data-field="cantidad" onchange="actualizarDesdeTabla(this)"/></td>
             <td><input class="umbral-input" type="number" value="${umbral}" data-key="${key}" data-field="umbral" onchange="actualizarDesdeTabla(this)"/></td>
@@ -2964,8 +2968,8 @@
             <span class="caja-add-badge">×${cant}</span>
             <div class="caja-prod-nombre">${p.nameProductos || "—"}</div>
             <div class="caja-prod-marca">${p.marcaProductos || ""}</div>
-            <div class="caja-prod-precio">${fmt(p.priceProductos)}</div>
-            ${p.precioVentaBonificadoFinalProductos ? `<div class="caja-prod-bonif">Bonif: ${fmt(p.precioVentaBonificadoFinalProductos)}</div>` : ""}
+            <div class="caja-prod-precio">${fmt(getPrecio(p))}</div>
+            ${parseFloat(p.precioVentaBonificadoFinalProductos) ? `<div class="caja-prod-bonif">Bonif: ${fmt(parseFloat(p.precioVentaBonificadoFinalProductos))}</div>` : ""}
           </div>`;
       }).join("");
     }
@@ -3007,6 +3011,11 @@
       setCajaFeedback("", "");
     }
 
+    function getPrecio(p) {
+      const v = parseFloat(p.priceProductos ?? p.precio ?? 0);
+      return isNaN(v) ? 0 : v;
+    }
+
     function actualizarTicket() {
       const itemsEl = document.getElementById("ticket-items");
       const emptyEl = document.getElementById("ticket-empty");
@@ -3031,7 +3040,7 @@
       // Rebuild items
       itemsEl.querySelectorAll(".ticket-item").forEach(e => e.remove());
       carrito.forEach(c => {
-        const precio = c.producto.priceProductos || 0;
+        const precio = getPrecio(c.producto);
         const subtotal = precio * c.cantidad;
         const div = document.createElement("div");
         div.className = "ticket-item";
@@ -3052,7 +3061,7 @@
       });
 
       const totalQty = carrito.reduce((a, c) => a + c.cantidad, 0);
-      const totalPrecio = carrito.reduce((a, c) => a + (c.producto.priceProductos || 0) * c.cantidad, 0);
+      const totalPrecio = carrito.reduce((a, c) => a + getPrecio(c.producto) * c.cantidad, 0);
       subtotalEl.textContent = fmt(totalPrecio);
       countEl.textContent = totalQty;
       totalEl.textContent = fmt(totalPrecio);
@@ -3078,7 +3087,7 @@
         return;
       }
 
-      const totalPrecio = carrito.reduce((a, c) => a + (c.producto.priceProductos || 0) * c.cantidad, 0);
+      const totalPrecio = carrito.reduce((a, c) => a + getPrecio(c.producto) * c.cantidad, 0);
       const totalQty    = carrito.reduce((a, c) => a + c.cantidad, 0);
       const descripcion = document.getElementById("caja-descripcion").value.trim();
 
@@ -3099,18 +3108,19 @@
       try {
         const transacciones = carrito.map(c => ({
           cantidadProductos:      c.cantidad,
-          correoUsuario:          username + "@mamoll.com",
+          correoUsuario:          correoUsuario || username || "",
           descripcionDelProducto: descripcion || c.producto.descriptionProductos || c.producto.nameProductos || "",
           dispositivoLogueado:    dispositivo,
           empresaPais:            c.producto.nameEmpresasPaises || empresaUsuario || "Argentina",
           enviadoaMySQL:          0,
           fechaHoraTransaccional: new Date().toISOString(),
-          precioTotal:            Math.round((c.producto.priceProductos || 0) * c.cantidad),
+          precioTotal:            Math.round(getPrecio(c.producto) * c.cantidad),
           productoTransaccional:  c.producto.nameProductos || "",
           usuarioDelegado:        username || "",
         }));
 
         let errores = 0;
+        let mensajeError = "";
         for (const t of transacciones) {
           const res = await fetch("http://185.139.1.178:4201/transacciones", {
             method: "POST",
@@ -3120,11 +3130,17 @@
             },
             body: JSON.stringify(t),
           });
-          if (!res.ok) errores++;
+          if (!res.ok) {
+            errores++;
+            try {
+              const errData = await res.json();
+              mensajeError = errData.error || errData.message || `Error ${res.status}`;
+            } catch { mensajeError = `Error ${res.status}`; }
+          }
         }
 
         if (errores > 0) {
-          setCajaFeedback(`Se registraron ${transacciones.length - errores} de ${transacciones.length} ítems. Verificá la conexión.`, "err");
+          setCajaFeedback(`Error al registrar: ${mensajeError}`, "err");
         } else {
           // Mostrar modal de éxito
           document.getElementById("vok-amount").textContent = fmt(totalPrecio);
@@ -3237,4 +3253,5 @@
   </script>
 </body>
 </html>
+
 
