@@ -721,6 +721,20 @@
     }
     .btn-stock:hover { background: rgba(255,255,255,.25); }
 
+    .btn-caja {
+      background: rgba(255,255,255,.15);
+      border: 1.5px solid rgba(255,255,255,.3);
+      border-radius: 8px;
+      color: white;
+      font-family: 'Syne', sans-serif;
+      font-weight: 600;
+      font-size: .7rem;
+      padding: 7px 12px;
+      cursor: pointer;
+      transition: background .15s;
+    }
+    .btn-caja:hover { background: rgba(255,255,255,.25); }
+
     .btn-nuevo-producto {
       background: white;
       border: none;
@@ -1132,6 +1146,271 @@
       .desktop-table-container { display: block; }
       .product-list { display: none !important; }
     }
+    /* ══════════════ CAJA SCREEN ══════════════ */
+    #screen-caja { background: var(--bg); }
+
+    .caja-topbar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 16px; height: 58px; background: var(--brand);
+      position: sticky; top: 0; z-index: 10;
+      box-shadow: 0 2px 12px rgba(0,86,179,.25);
+    }
+    .caja-topbar-left { display: flex; align-items: center; gap: 12px; }
+    .caja-topbar-title { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.05rem; color: white; }
+
+    .caja-tabs { display: flex; gap: 4px; }
+    .caja-tab {
+      background: rgba(255,255,255,.15);
+      border: 1.5px solid rgba(255,255,255,.25);
+      border-radius: 7px; color: rgba(255,255,255,.8);
+      font-family: 'JetBrains Mono', monospace; font-size: .65rem;
+      padding: 5px 10px; cursor: pointer; letter-spacing: .5px; transition: all .15s;
+    }
+    .caja-tab:hover { border-color: white; color: white; }
+    .caja-tab.active { background: white; border-color: white; color: var(--brand); font-weight: 700; }
+
+    .caja-layout {
+      display: flex; flex-direction: column; flex: 1;
+    }
+    @media (min-width: 900px) {
+      .caja-layout {
+        display: grid;
+        grid-template-columns: 1fr 360px;
+        height: calc(100vh - 58px);
+        overflow: hidden;
+      }
+    }
+
+    /* Panel izquierdo - productos */
+    .caja-productos-panel {
+      display: flex; flex-direction: column;
+      overflow: hidden;
+    }
+    .caja-search-bar {
+      padding: 12px 16px; background: white; border-bottom: 1px solid var(--border);
+      position: sticky; top: 58px; z-index: 8;
+      display: flex; gap: 10px; align-items: center;
+    }
+    .caja-search-wrap { position: relative; flex: 1; }
+    .caja-search-wrap svg { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--muted); pointer-events: none; }
+    .caja-search-input {
+      width: 100%; background: var(--bg3); border: 1.5px solid var(--border);
+      border-radius: 10px; color: var(--text); font-family: 'JetBrains Mono', monospace;
+      font-size: .85rem; padding: 10px 14px 10px 36px; outline: none;
+      transition: border-color .2s;
+    }
+    .caja-search-input:focus { border-color: var(--brand); box-shadow: 0 0 0 3px rgba(0,86,179,.10); }
+    .caja-search-input::placeholder { color: var(--muted); }
+
+    .caja-prod-grid {
+      flex: 1; overflow-y: auto; padding: 14px 16px 100px;
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px;
+    }
+    @media (min-width: 480px) { .caja-prod-grid { grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); } }
+
+    .caja-prod-card {
+      background: white; border: 1.5px solid var(--border); border-radius: 12px;
+      padding: 14px 14px 12px; cursor: pointer; transition: border-color .15s, box-shadow .15s, transform .1s;
+      animation: fadeUp .3s ease both; display: flex; flex-direction: column; gap: 6px;
+      position: relative; user-select: none;
+    }
+    .caja-prod-card:hover { border-color: var(--brand); box-shadow: 0 4px 18px rgba(0,86,179,.13); }
+    .caja-prod-card:active { transform: scale(.98); }
+
+    .caja-prod-nombre {
+      font-family: 'Syne', sans-serif; font-weight: 700; font-size: .88rem;
+      color: var(--text); line-height: 1.3;
+    }
+    .caja-prod-marca { font-size: .68rem; color: var(--muted); }
+    .caja-prod-precio {
+      font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.05rem;
+      color: var(--brand); margin-top: 2px;
+    }
+    .caja-prod-bonif { font-size: .7rem; color: var(--accent2); font-weight: 600; }
+    .caja-add-badge {
+      position: absolute; top: 8px; right: 10px;
+      background: var(--brand); color: white;
+      border-radius: 20px; padding: 1px 7px; font-size: .65rem; font-weight: 700;
+      display: none;
+    }
+    .caja-prod-card.en-carrito .caja-add-badge { display: inline-block; }
+    .caja-prod-card.en-carrito { border-color: var(--brand); background: var(--brand-pale); }
+
+    /* Panel derecho - carrito / ticket */
+    .caja-ticket-panel {
+      background: white; border-left: 1px solid var(--border);
+      display: flex; flex-direction: column; overflow: hidden;
+      border-top: 2px solid var(--border);
+    }
+    @media (min-width: 900px) { .caja-ticket-panel { border-top: none; max-height: calc(100vh - 58px); } }
+
+    .ticket-header {
+      padding: 14px 16px; background: var(--bg3); border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .ticket-title { font-family: 'Syne', sans-serif; font-weight: 800; font-size: .95rem; color: var(--text); }
+    .ticket-clear {
+      background: none; border: 1.5px solid var(--danger); border-radius: 7px;
+      color: var(--danger); font-family: 'Syne', sans-serif; font-weight: 700;
+      font-size: .65rem; padding: 5px 10px; cursor: pointer; transition: background .15s;
+    }
+    .ticket-clear:hover { background: #fff0f3; }
+
+    .ticket-items {
+      flex: 1; overflow-y: auto; padding: 10px 14px;
+      display: flex; flex-direction: column; gap: 8px;
+      min-height: 180px;
+    }
+    .ticket-empty {
+      flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+      color: var(--muted); font-size: .75rem; letter-spacing: 2px; gap: 8px; padding: 24px;
+    }
+    .ticket-item {
+      background: var(--bg3); border: 1px solid var(--border); border-radius: 10px;
+      padding: 10px 12px; display: flex; align-items: center; gap: 8px;
+      animation: fadeUp .2s ease both;
+    }
+    .ticket-item-info { flex: 1; min-width: 0; }
+    .ticket-item-nombre {
+      font-family: 'Syne', sans-serif; font-weight: 700; font-size: .82rem;
+      color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .ticket-item-precio { font-size: .72rem; color: var(--brand); font-weight: 600; }
+    .ticket-item-desc { font-size: .65rem; color: var(--muted); }
+    .ticket-item-controls { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+    .qty-btn {
+      width: 26px; height: 26px; border-radius: 6px; border: 1.5px solid var(--border);
+      background: white; color: var(--text); font-size: .9rem; font-weight: 700;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: border-color .15s, background .15s; flex-shrink: 0;
+    }
+    .qty-btn:hover { border-color: var(--brand); background: var(--brand-pale); }
+    .qty-btn.remove:hover { border-color: var(--danger); background: #fff0f3; color: var(--danger); }
+    .qty-display {
+      font-family: 'Syne', sans-serif; font-weight: 800; font-size: .95rem;
+      color: var(--text); min-width: 24px; text-align: center;
+    }
+    .ticket-item-subtotal {
+      font-family: 'Syne', sans-serif; font-weight: 800; font-size: .88rem;
+      color: var(--brand); white-space: nowrap; flex-shrink: 0;
+    }
+
+    .ticket-footer {
+      padding: 14px 16px; border-top: 1px solid var(--border); background: white;
+      display: flex; flex-direction: column; gap: 10px;
+    }
+    .ticket-totals { display: flex; flex-direction: column; gap: 4px; }
+    .ticket-total-row {
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: .78rem; color: var(--muted);
+    }
+    .ticket-total-row.main {
+      font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.1rem;
+      color: var(--text); padding-top: 6px; border-top: 1px solid var(--border);
+    }
+    .ticket-total-row.main span:last-child { color: var(--brand); }
+
+    .ticket-cliente {
+      display: flex; flex-direction: column; gap: 6px;
+    }
+    .ticket-cliente-label { font-size: .62rem; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); }
+    .ticket-cliente-input {
+      background: var(--bg3); border: 1.5px solid var(--border); border-radius: 8px;
+      color: var(--text); font-family: 'JetBrains Mono', monospace; font-size: .85rem;
+      padding: 9px 12px; outline: none; transition: border-color .2s;
+    }
+    .ticket-cliente-input:focus { border-color: var(--brand); box-shadow: 0 0 0 3px rgba(0,86,179,.10); }
+
+    .ticket-metodo-pago {
+      display: flex; gap: 6px; flex-wrap: wrap;
+    }
+    .metodo-btn {
+      flex: 1; min-width: 70px; padding: 8px; border-radius: 8px;
+      border: 1.5px solid var(--border); background: var(--bg3);
+      font-family: 'Syne', sans-serif; font-weight: 700; font-size: .68rem;
+      color: var(--muted); cursor: pointer; transition: all .15s; text-align: center;
+    }
+    .metodo-btn:hover { border-color: var(--brand); color: var(--brand); background: var(--brand-pale); }
+    .metodo-btn.selected { border-color: var(--brand); background: var(--brand); color: white; }
+
+    .btn-cobrar {
+      width: 100%; padding: 15px; background: var(--success); color: white;
+      font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1rem;
+      letter-spacing: 1px; border: none; border-radius: 10px; cursor: pointer;
+      transition: background .15s, transform .1s;
+      box-shadow: 0 4px 16px rgba(26,172,94,.35);
+    }
+    .btn-cobrar:hover { background: #148f4e; }
+    .btn-cobrar:active { transform: scale(.98); }
+    .btn-cobrar:disabled { opacity: .45; cursor: not-allowed; }
+
+    .caja-feedback {
+      padding: 10px 14px; border-radius: 8px; font-size: .8rem;
+      display: none; border-left: 4px solid; text-align: center;
+    }
+    .caja-feedback.ok  { display: block; background: #edfff6; border-color: var(--success); color: #0d7a3e; }
+    .caja-feedback.err { display: block; background: #fff0f3; border-color: var(--danger);  color: var(--danger); }
+
+    /* ── HISTORIAL DE TRANSACCIONES ── */
+    .historial-panel {
+      flex: 1; overflow-y: auto; padding: 14px 16px 80px;
+    }
+    .historial-toolbar {
+      padding: 12px 16px; background: white; border-bottom: 1px solid var(--border);
+      display: flex; gap: 10px; align-items: center;
+    }
+    .historial-search {
+      flex: 1; background: var(--bg3); border: 1.5px solid var(--border); border-radius: 10px;
+      color: var(--text); font-family: 'JetBrains Mono', monospace; font-size: .82rem;
+      padding: 9px 14px; outline: none; transition: border-color .2s;
+    }
+    .historial-search:focus { border-color: var(--brand); }
+    .btn-reload-hist {
+      background: var(--brand-pale); border: 1.5px solid var(--brand-mid); border-radius: 8px;
+      color: var(--brand); font-family: 'Syne', sans-serif; font-weight: 700;
+      font-size: .68rem; padding: 8px 12px; cursor: pointer; white-space: nowrap; transition: background .15s;
+    }
+    .btn-reload-hist:hover { background: var(--brand-mid); }
+
+    .hist-card {
+      background: white; border: 1.5px solid var(--border); border-radius: 12px;
+      padding: 14px 16px; margin-bottom: 8px; animation: fadeUp .3s ease both;
+    }
+    .hist-card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; gap: 8px; }
+    .hist-card-nombre { font-family: 'Syne', sans-serif; font-weight: 700; font-size: .92rem; color: var(--text); }
+    .hist-card-total { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1rem; color: var(--brand); white-space: nowrap; }
+    .hist-card-meta { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+    .hist-meta-badge {
+      font-size: .65rem; background: var(--bg3); border: 1px solid var(--border);
+      border-radius: 20px; padding: 2px 8px; color: var(--muted);
+    }
+    .hist-meta-fecha { font-size: .68rem; color: var(--muted); }
+    .hist-card-usuario { font-size: .7rem; color: var(--muted); margin-top: 4px; }
+
+    /* ── MODAL COBRO EXITOSO ── */
+    .venta-ok-overlay {
+      display: none; position: fixed; inset: 0; background: rgba(0,30,70,.5);
+      z-index: 200; align-items: center; justify-content: center;
+      backdrop-filter: blur(4px);
+    }
+    .venta-ok-overlay.show { display: flex; }
+    .venta-ok-modal {
+      background: white; border-radius: 20px; padding: 36px 32px; max-width: 380px; width: 92%;
+      text-align: center; animation: fadeUp .3s ease both;
+      box-shadow: 0 20px 60px rgba(0,0,0,.2);
+    }
+    .venta-ok-icon { font-size: 3rem; margin-bottom: 12px; }
+    .venta-ok-title { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.4rem; color: var(--success); margin-bottom: 8px; }
+    .venta-ok-amount { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 2rem; color: var(--brand); margin-bottom: 16px; }
+    .venta-ok-details { font-size: .8rem; color: var(--muted); line-height: 1.8; margin-bottom: 20px; }
+    .btn-ok-cerrar {
+      background: var(--brand); color: white; font-family: 'Syne', sans-serif;
+      font-weight: 700; font-size: .9rem; padding: 14px 32px;
+      border: none; border-radius: 10px; cursor: pointer;
+      box-shadow: 0 4px 16px rgba(0,86,179,.3); transition: background .15s;
+    }
+    .btn-ok-cerrar:hover { background: var(--brand-dk); }
+
   </style>
 </head>
 <body>
@@ -1181,6 +1460,7 @@
       <div class="topbar-right">
         <button class="btn-nuevo-producto" id="btn-nuevo-producto" style="display:none" >+ NUEVO</button>
         <button class="btn-stock" id="btn-stock">📦 STOCK</button>
+        <button class="btn-caja" id="btn-caja">🛒 CAJA</button>
         <button class="btn-logout" id="btn-logout">SALIR</button>
       </div>
     </div>
@@ -1462,6 +1742,118 @@
         <button class="btn-save-edit" id="btn-save-crear" onclick="guardarNuevoProducto()">CREAR PRODUCTO</button>
         <div class="modal-feedback" id="crear-feedback"></div>
       </div>
+    </div>
+  </div>
+
+  <!-- ══════════════ CAJA ══════════════ -->
+  <div id="screen-caja" class="screen">
+
+    <!-- Topbar Caja -->
+    <div class="caja-topbar">
+      <div class="caja-topbar-left">
+        <div class="caja-topbar-title">🛒 CAJA</div>
+        <div class="caja-tabs">
+          <button class="caja-tab active" id="ctab-venta" onclick="switchCajaTab('venta')">VENTA</button>
+          <button class="caja-tab" id="ctab-historial" onclick="switchCajaTab('historial')">HISTORIAL</button>
+        </div>
+      </div>
+      <button class="btn-back-app" id="btn-back-caja">← VOLVER</button>
+    </div>
+
+    <!-- TAB VENTA -->
+    <div id="caja-tab-venta" class="caja-layout">
+
+      <!-- Panel productos -->
+      <div class="caja-productos-panel">
+        <div class="caja-search-bar">
+          <div class="caja-search-wrap">
+            <svg width="15" height="15" fill="currentColor" viewBox="0 0 16 16">
+              <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.099zm-5.242 1.656a5.5 5.5 0 1 1 0-11 5.5 5.5 0 0 1 0 11z"/>
+            </svg>
+            <input class="caja-search-input" id="caja-search" type="search" placeholder="Buscar producto para agregar..." />
+          </div>
+        </div>
+        <div class="caja-prod-grid" id="caja-prod-grid">
+          <div class="loading"><div class="spinner"></div>CARGANDO</div>
+        </div>
+      </div>
+
+      <!-- Panel ticket / carrito -->
+      <div class="caja-ticket-panel">
+        <div class="ticket-header">
+          <div class="ticket-title">🧾 TICKET</div>
+          <button class="ticket-clear" id="btn-vaciar-caja" onclick="vaciarCarrito()">VACIAR</button>
+        </div>
+
+        <div class="ticket-items" id="ticket-items">
+          <div class="ticket-empty" id="ticket-empty">
+            <div style="font-size:1.6rem">🛒</div>
+            <div>SIN PRODUCTOS</div>
+            <div style="font-size:.7rem;letter-spacing:1px">Tocá un producto para agregar</div>
+          </div>
+        </div>
+
+        <div class="ticket-footer">
+          <div class="ticket-totals">
+            <div class="ticket-total-row">
+              <span>Subtotal</span>
+              <span id="caja-subtotal">$0</span>
+            </div>
+            <div class="ticket-total-row">
+              <span>Ítems</span>
+              <span id="caja-items-count">0</span>
+            </div>
+            <div class="ticket-total-row main">
+              <span>TOTAL</span>
+              <span id="caja-total">$0</span>
+            </div>
+          </div>
+
+          <div class="ticket-cliente">
+            <div class="ticket-cliente-label">Descripción / Cliente (opcional)</div>
+            <input class="ticket-cliente-input" id="caja-descripcion" type="text" placeholder="Ej: Venta mostrador, Juan García..." maxlength="80" />
+          </div>
+
+          <div>
+            <div class="ticket-cliente-label" style="margin-bottom:6px">Método de pago</div>
+            <div class="ticket-metodo-pago">
+              <button class="metodo-btn selected" data-metodo="Efectivo" onclick="selectMetodo(this)">💵 Efectivo</button>
+              <button class="metodo-btn" data-metodo="Débito" onclick="selectMetodo(this)">💳 Débito</button>
+              <button class="metodo-btn" data-metodo="Crédito" onclick="selectMetodo(this)">💳 Crédito</button>
+              <button class="metodo-btn" data-metodo="Transferencia" onclick="selectMetodo(this)">📲 Transfer.</button>
+            </div>
+          </div>
+
+          <div class="caja-feedback" id="caja-feedback"></div>
+
+          <button class="btn-cobrar" id="btn-cobrar" onclick="procesarVenta()">
+            COBRAR — <span id="btn-cobrar-total">$0</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB HISTORIAL -->
+    <div id="caja-tab-historial" style="display:none;flex:1;flex-direction:column;overflow:hidden">
+      <div class="historial-toolbar">
+        <input class="historial-search" id="hist-search" type="search" placeholder="Buscar transacción..." oninput="filtrarHistorial()" />
+        <button class="btn-reload-hist" onclick="cargarHistorial()">↻ ACTUALIZAR</button>
+      </div>
+      <div class="historial-panel" id="historial-panel">
+        <div class="loading"><div class="spinner"></div>CARGANDO</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Modal venta exitosa -->
+  <div class="venta-ok-overlay" id="venta-ok-overlay">
+    <div class="venta-ok-modal">
+      <div class="venta-ok-icon">✅</div>
+      <div class="venta-ok-title">¡VENTA REGISTRADA!</div>
+      <div class="venta-ok-amount" id="vok-amount"></div>
+      <div class="venta-ok-details" id="vok-details"></div>
+      <button class="btn-ok-cerrar" onclick="cerrarVentaOk()">NUEVA VENTA</button>
     </div>
   </div>
 
@@ -2526,6 +2918,323 @@
 
     // ── INIT ─────────────────────────────────────────────
     if (token && username) enterApp();
+    // ══════════════ CAJA ══════════════
+    let carrito = []; // [{producto, cantidad}]
+    let metodoPago = "Efectivo";
+    let todasTransacciones = [];
+
+    // Botón caja en topbar
+    document.getElementById("btn-caja").addEventListener("click", () => {
+      showScreen("screen-caja");
+      renderCajaProductos();
+    });
+    document.getElementById("btn-back-caja").addEventListener("click", () => {
+      showScreen("screen-app");
+    });
+
+    function switchCajaTab(tab) {
+      document.getElementById("ctab-venta").classList.toggle("active", tab === "venta");
+      document.getElementById("ctab-historial").classList.toggle("active", tab === "historial");
+      document.getElementById("caja-tab-venta").style.display     = tab === "venta"     ? "" : "none";
+      document.getElementById("caja-tab-historial").style.display = tab === "historial" ? "flex" : "none";
+      if (tab === "historial") cargarHistorial();
+    }
+
+    // ── RENDER GRILLA PRODUCTOS ──────────────────────────
+    function renderCajaProductos(filtro) {
+      const grid = document.getElementById("caja-prod-grid");
+      const lista = filtro
+        ? allProductos.filter(p =>
+            (p.nameProductos||"").toLowerCase().includes(filtro) ||
+            (p.marcaProductos||"").toLowerCase().includes(filtro) ||
+            (p.codigoBarraProductos||"").toLowerCase().includes(filtro)
+          )
+        : allProductos;
+
+      if (!lista || lista.length === 0) {
+        grid.innerHTML = `<div style="grid-column:1/-1;padding:40px;text-align:center;color:var(--muted);font-size:.8rem;letter-spacing:2px">SIN RESULTADOS</div>`;
+        return;
+      }
+
+      grid.innerHTML = lista.map((p, i) => {
+        const enCarrito = carrito.find(c => c.producto.idProductos === p.idProductos);
+        const cant = enCarrito ? enCarrito.cantidad : 0;
+        return `
+          <div class="caja-prod-card${enCarrito ? " en-carrito" : ""}" onclick="agregarAlCarrito('${p.idProductos}')" style="animation-delay:${Math.min(i*.02,.4)}s">
+            <span class="caja-add-badge">×${cant}</span>
+            <div class="caja-prod-nombre">${p.nameProductos || "—"}</div>
+            <div class="caja-prod-marca">${p.marcaProductos || ""}</div>
+            <div class="caja-prod-precio">${fmt(p.priceProductos)}</div>
+            ${p.precioVentaBonificadoFinalProductos ? `<div class="caja-prod-bonif">Bonif: ${fmt(p.precioVentaBonificadoFinalProductos)}</div>` : ""}
+          </div>`;
+      }).join("");
+    }
+
+    document.getElementById("caja-search").addEventListener("input", function() {
+      renderCajaProductos(this.value.toLowerCase().trim());
+    });
+
+    // ── CARRITO ──────────────────────────────────────────
+    function agregarAlCarrito(idProducto) {
+      const prod = allProductos.find(p => p.idProductos == idProducto);
+      if (!prod) return;
+      const existente = carrito.find(c => c.producto.idProductos == idProducto);
+      if (existente) {
+        existente.cantidad++;
+      } else {
+        carrito.push({ producto: prod, cantidad: 1 });
+      }
+      actualizarTicket();
+      const filtro = document.getElementById("caja-search").value.toLowerCase().trim();
+      renderCajaProductos(filtro || undefined);
+    }
+
+    function cambiarCantidad(idProducto, delta) {
+      const idx = carrito.findIndex(c => c.producto.idProductos == idProducto);
+      if (idx < 0) return;
+      carrito[idx].cantidad += delta;
+      if (carrito[idx].cantidad <= 0) carrito.splice(idx, 1);
+      actualizarTicket();
+      const filtro = document.getElementById("caja-search").value.toLowerCase().trim();
+      renderCajaProductos(filtro || undefined);
+    }
+
+    function vaciarCarrito() {
+      carrito = [];
+      actualizarTicket();
+      const filtro = document.getElementById("caja-search").value.toLowerCase().trim();
+      renderCajaProductos(filtro || undefined);
+      setCajaFeedback("", "");
+    }
+
+    function actualizarTicket() {
+      const itemsEl = document.getElementById("ticket-items");
+      const emptyEl = document.getElementById("ticket-empty");
+      const subtotalEl = document.getElementById("caja-subtotal");
+      const countEl = document.getElementById("caja-items-count");
+      const totalEl = document.getElementById("caja-total");
+      const btnTotal = document.getElementById("btn-cobrar-total");
+
+      if (carrito.length === 0) {
+        // Limpiar items excepto el empty
+        itemsEl.querySelectorAll(".ticket-item").forEach(e => e.remove());
+        if (emptyEl) emptyEl.style.display = "";
+        subtotalEl.textContent = "$0";
+        countEl.textContent = "0";
+        totalEl.textContent = "$0";
+        btnTotal.textContent = "$0";
+        return;
+      }
+
+      if (emptyEl) emptyEl.style.display = "none";
+
+      // Rebuild items
+      itemsEl.querySelectorAll(".ticket-item").forEach(e => e.remove());
+      carrito.forEach(c => {
+        const precio = c.producto.priceProductos || 0;
+        const subtotal = precio * c.cantidad;
+        const div = document.createElement("div");
+        div.className = "ticket-item";
+        div.innerHTML = `
+          <div class="ticket-item-info">
+            <div class="ticket-item-nombre">${c.producto.nameProductos || "—"}</div>
+            <div class="ticket-item-precio">${fmt(precio)} c/u</div>
+            <div class="ticket-item-desc">${c.producto.marcaProductos || ""}</div>
+          </div>
+          <div class="ticket-item-controls">
+            <button class="qty-btn remove" onclick="cambiarCantidad('${c.producto.idProductos}', -1)">−</button>
+            <span class="qty-display">${c.cantidad}</span>
+            <button class="qty-btn" onclick="cambiarCantidad('${c.producto.idProductos}', 1)">+</button>
+          </div>
+          <div class="ticket-item-subtotal">${fmt(subtotal)}</div>
+        `;
+        itemsEl.appendChild(div);
+      });
+
+      const totalQty = carrito.reduce((a, c) => a + c.cantidad, 0);
+      const totalPrecio = carrito.reduce((a, c) => a + (c.producto.priceProductos || 0) * c.cantidad, 0);
+      subtotalEl.textContent = fmt(totalPrecio);
+      countEl.textContent = totalQty;
+      totalEl.textContent = fmt(totalPrecio);
+      btnTotal.textContent = fmt(totalPrecio);
+    }
+
+    function selectMetodo(btn) {
+      document.querySelectorAll(".metodo-btn").forEach(b => b.classList.remove("selected"));
+      btn.classList.add("selected");
+      metodoPago = btn.dataset.metodo;
+    }
+
+    function setCajaFeedback(msg, type) {
+      const el = document.getElementById("caja-feedback");
+      el.textContent = msg;
+      el.className = "caja-feedback" + (type ? " " + type : "");
+    }
+
+    // ── PROCESAR VENTA ───────────────────────────────────
+    async function procesarVenta() {
+      if (carrito.length === 0) {
+        setCajaFeedback("Agregá al menos un producto al carrito.", "err");
+        return;
+      }
+
+      const totalPrecio = carrito.reduce((a, c) => a + (c.producto.priceProductos || 0) * c.cantidad, 0);
+      const totalQty    = carrito.reduce((a, c) => a + c.cantidad, 0);
+      const descripcion = document.getElementById("caja-descripcion").value.trim();
+
+      // Detectar SO
+      const ua = navigator.userAgent;
+      let dispositivo = "Web";
+      if (/Windows/.test(ua))     dispositivo = "Windows";
+      else if (/iPhone|iPad/.test(ua)) dispositivo = "iOS";
+      else if (/Android/.test(ua))dispositivo = "Android";
+      else if (/Mac/.test(ua))    dispositivo = "MacOS";
+      else if (/Linux/.test(ua))  dispositivo = "Linux";
+
+      // Si hay varios productos en el carrito, enviamos una transacción por cada ítem
+      const btn = document.getElementById("btn-cobrar");
+      btn.disabled = true;
+      setCajaFeedback("", "");
+
+      try {
+        const transacciones = carrito.map(c => ({
+          cantidadProductos:      c.cantidad,
+          correoUsuario:          username + "@mamoll.com",
+          descripcionDelProducto: descripcion || c.producto.descriptionProductos || c.producto.nameProductos || "",
+          dispositivoLogueado:    dispositivo,
+          empresaPais:            c.producto.nameEmpresasPaises || empresaUsuario || "Argentina",
+          enviadoaMySQL:          0,
+          fechaHoraTransaccional: new Date().toISOString(),
+          precioTotal:            Math.round((c.producto.priceProductos || 0) * c.cantidad),
+          productoTransaccional:  c.producto.nameProductos || "",
+          usuarioDelegado:        username || "",
+        }));
+
+        let errores = 0;
+        for (const t of transacciones) {
+          const res = await fetch("http://185.139.1.178:4201/transacciones", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify(t),
+          });
+          if (!res.ok) errores++;
+        }
+
+        if (errores > 0) {
+          setCajaFeedback(`Se registraron ${transacciones.length - errores} de ${transacciones.length} ítems. Verificá la conexión.`, "err");
+        } else {
+          // Mostrar modal de éxito
+          document.getElementById("vok-amount").textContent = fmt(totalPrecio);
+          document.getElementById("vok-details").innerHTML = `
+            <strong>${totalQty} ítem${totalQty !== 1 ? "s" : ""}</strong> · ${metodoPago}<br>
+            ${carrito.map(c => `${c.producto.nameProductos} ×${c.cantidad}`).join("<br>")}
+            ${descripcion ? `<br><br><em>${descripcion}</em>` : ""}
+          `;
+          document.getElementById("venta-ok-overlay").classList.add("show");
+          carrito = [];
+          actualizarTicket();
+          renderCajaProductos(document.getElementById("caja-search").value.toLowerCase().trim() || undefined);
+          document.getElementById("caja-descripcion").value = "";
+          document.querySelectorAll(".metodo-btn").forEach((b, i) => b.classList.toggle("selected", i === 0));
+          metodoPago = "Efectivo";
+        }
+      } catch (err) {
+        setCajaFeedback("Error de conexión con el servidor de transacciones.", "err");
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    function cerrarVentaOk() {
+      document.getElementById("venta-ok-overlay").classList.remove("show");
+      setCajaFeedback("", "");
+    }
+
+    // ── HISTORIAL ────────────────────────────────────────
+    async function cargarHistorial() {
+      const panel = document.getElementById("historial-panel");
+      panel.innerHTML = '<div class="loading"><div class="spinner"></div>CARGANDO</div>';
+      try {
+        const res = await fetch("http://185.139.1.178:4201/transacciones", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        todasTransacciones = Array.isArray(data) ? data : (data.data || []);
+        // Sort by fecha desc
+        todasTransacciones.sort((a, b) => new Date(b.fechaHoraTransaccional) - new Date(a.fechaHoraTransaccional));
+        renderHistorial(todasTransacciones);
+      } catch (err) {
+        panel.innerHTML = `<div class="empty" style="padding:40px">Error al cargar historial. Verificá la conexión.</div>`;
+      }
+    }
+
+    function filtrarHistorial() {
+      const q = document.getElementById("hist-search").value.toLowerCase().trim();
+      if (!q) { renderHistorial(todasTransacciones); return; }
+      renderHistorial(todasTransacciones.filter(t =>
+        (t.productoTransaccional||"").toLowerCase().includes(q) ||
+        (t.descripcionDelProducto||"").toLowerCase().includes(q) ||
+        (t.usuarioDelegado||"").toLowerCase().includes(q) ||
+        (t.correoUsuario||"").toLowerCase().includes(q)
+      ));
+    }
+
+    function renderHistorial(lista) {
+      const panel = document.getElementById("historial-panel");
+      if (!lista || lista.length === 0) {
+        panel.innerHTML = `<div style="color:var(--muted);font-size:.8rem;padding:40px;text-align:center;letter-spacing:2px">SIN TRANSACCIONES</div>`;
+        return;
+      }
+
+      // Resumen rápido
+      const totalVentas = lista.reduce((a, t) => a + (t.precioTotal || 0), 0);
+      const totalItems  = lista.reduce((a, t) => a + (t.cantidadProductos || 0), 0);
+
+      panel.innerHTML = `
+        <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;">
+          <div style="flex:1;min-width:140px;background:white;border:1.5px solid var(--border);border-radius:10px;padding:14px 16px">
+            <div style="font-size:.6rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:4px">Total facturado</div>
+            <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:1.2rem;color:var(--brand)">${fmt(totalVentas)}</div>
+          </div>
+          <div style="flex:1;min-width:120px;background:white;border:1.5px solid var(--border);border-radius:10px;padding:14px 16px">
+            <div style="font-size:.6rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:4px">Transacciones</div>
+            <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:1.2rem;color:var(--text)">${lista.length}</div>
+          </div>
+          <div style="flex:1;min-width:120px;background:white;border:1.5px solid var(--border);border-radius:10px;padding:14px 16px">
+            <div style="font-size:.6rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:4px">Unidades vendidas</div>
+            <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:1.2rem;color:var(--text)">${fmtNum(totalItems)}</div>
+          </div>
+        </div>
+        ${lista.map(t => {
+          const fecha = t.fechaHoraTransaccional ? new Date(t.fechaHoraTransaccional) : null;
+          const fechaStr = fecha ? fecha.toLocaleDateString("es-AR", {day:"2-digit",month:"2-digit",year:"numeric"}) + " " +
+            fecha.toLocaleTimeString("es-AR",{hour:"2-digit",minute:"2-digit"}) : "—";
+          return `<div class="hist-card">
+            <div class="hist-card-header">
+              <div class="hist-card-nombre">${t.productoTransaccional || "—"}</div>
+              <div class="hist-card-total">${fmt(t.precioTotal)}</div>
+            </div>
+            <div class="hist-card-meta">
+              <span class="hist-meta-badge">×${t.cantidadProductos || 0} unid.</span>
+              ${t.empresaPais ? `<span class="hist-meta-badge">${t.empresaPais}</span>` : ""}
+              ${t.dispositivoLogueado ? `<span class="hist-meta-badge">${t.dispositivoLogueado}</span>` : ""}
+              <span class="hist-meta-fecha">🕐 ${fechaStr}</span>
+            </div>
+            ${t.descripcionDelProducto && t.descripcionDelProducto !== t.productoTransaccional
+              ? `<div class="hist-card-usuario" style="color:var(--text);margin-top:4px">${t.descripcionDelProducto}</div>` : ""}
+            <div class="hist-card-usuario">👤 ${t.usuarioDelegado || "—"}  ·  ${t.correoUsuario || ""}  ·  ID: ${t.id || t._id || "—"}</div>
+          </div>`;
+        }).join("")}
+      `;
+    }
+
+    // if already logged in, wiring done — renderCajaProductos will pull from allProductos when opening caja
+
   </script>
 </body>
 </html>
+
