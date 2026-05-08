@@ -1146,95 +1146,328 @@
       .desktop-table-container { display: block; }
       .product-list { display: none !important; }
     }
-    /* ══════════════ CAJA SCREEN ══════════════ */
-    #screen-caja { background: var(--bg); }
+    /* ══════════════ CAJA SCREEN — MOBILE FIRST ══════════════ */
+    #screen-caja {
+      background: var(--bg);
+      display: flex; flex-direction: column;
+      height: 100vh; height: 100dvh;
+      overflow: hidden;
+    }
 
     .caja-topbar {
       display: flex; align-items: center; justify-content: space-between;
-      padding: 0 16px; height: 58px; background: var(--brand);
-      position: sticky; top: 0; z-index: 10;
-      box-shadow: 0 2px 12px rgba(0,86,179,.25);
+      padding: 0 14px; height: 52px; background: var(--brand);
+      flex-shrink: 0;
+      box-shadow: 0 2px 10px rgba(0,86,179,.3);
+      z-index: 10;
     }
-    .caja-topbar-left { display: flex; align-items: center; gap: 12px; }
-    .caja-topbar-title { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.05rem; color: white; }
+    .caja-topbar-left { display: flex; align-items: center; gap: 10px; }
+    .caja-topbar-title { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1rem; color: white; letter-spacing: -0.5px; }
 
     .caja-tabs { display: flex; gap: 4px; }
     .caja-tab {
       background: rgba(255,255,255,.15);
       border: 1.5px solid rgba(255,255,255,.25);
       border-radius: 7px; color: rgba(255,255,255,.8);
-      font-family: 'JetBrains Mono', monospace; font-size: .65rem;
-      padding: 5px 10px; cursor: pointer; letter-spacing: .5px; transition: all .15s;
+      font-family: 'JetBrains Mono', monospace; font-size: .62rem;
+      padding: 5px 9px; cursor: pointer; letter-spacing: .5px; transition: all .15s;
     }
     .caja-tab:hover { border-color: white; color: white; }
     .caja-tab.active { background: white; border-color: white; color: var(--brand); font-weight: 700; }
 
+    /* ── LAYOUT MOBILE: columna, ticket arriba, productos abajo ── */
     .caja-layout {
-      display: flex; flex-direction: column; flex: 1;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      overflow: hidden;
     }
+
+    /* Desktop: lado a lado */
     @media (min-width: 900px) {
       .caja-layout {
-        display: grid;
-        grid-template-columns: 1fr 360px;
-        height: calc(100vh - 58px);
-        overflow: hidden;
+        flex-direction: row;
+        height: calc(100vh - 52px);
       }
     }
 
-    /* Panel izquierdo - productos */
+    /* ══ TICKET PANEL (arriba en mobile) ══ */
+    .caja-ticket-panel {
+      background: white;
+      display: flex; flex-direction: column;
+      flex-shrink: 0;
+      border-bottom: 2px solid var(--border);
+      max-height: 52vh;
+      max-height: 52dvh;
+    }
+    @media (min-width: 900px) {
+      .caja-ticket-panel {
+        max-height: none;
+        width: 340px;
+        flex-shrink: 0;
+        border-bottom: none;
+        border-left: 1px solid var(--border);
+        order: 2;
+      }
+    }
+
+    .ticket-header {
+      padding: 10px 14px;
+      background: var(--bg3); border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .ticket-title {
+      font-family: 'Syne', sans-serif; font-weight: 800; font-size: .9rem; color: var(--text);
+      display: flex; align-items: center; gap: 6px;
+    }
+    .ticket-count-badge {
+      background: var(--brand); color: white; border-radius: 20px;
+      padding: 1px 7px; font-size: .6rem; font-weight: 700;
+    }
+    .ticket-clear {
+      background: none; border: 1.5px solid var(--danger); border-radius: 7px;
+      color: var(--danger); font-family: 'Syne', sans-serif; font-weight: 700;
+      font-size: .62rem; padding: 4px 10px; cursor: pointer; transition: background .15s;
+    }
+    .ticket-clear:hover { background: #fff0f3; }
+
+    .ticket-items {
+      flex: 1; overflow-y: auto; padding: 8px 12px;
+      display: flex; flex-direction: column; gap: 6px;
+      min-height: 60px;
+    }
+    .ticket-empty {
+      flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+      color: var(--muted); font-size: .72rem; letter-spacing: 2px; gap: 6px; padding: 16px;
+    }
+
+    .ticket-item {
+      background: var(--bg3); border: 1px solid var(--border); border-radius: 10px;
+      padding: 8px 10px; display: flex; align-items: center; gap: 8px;
+      animation: fadeUp .2s ease both;
+    }
+    .ticket-item-info { flex: 1; min-width: 0; }
+    .ticket-item-nombre {
+      font-family: 'Syne', sans-serif; font-weight: 700; font-size: .8rem;
+      color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .ticket-item-precio { font-size: .68rem; color: var(--brand); font-weight: 600; }
+    .ticket-item-desc { font-size: .62rem; color: var(--muted); }
+    .ticket-item-controls { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
+    .qty-btn {
+      width: 28px; height: 28px; border-radius: 7px; border: 1.5px solid var(--border);
+      background: white; color: var(--text); font-size: .9rem; font-weight: 700;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: border-color .15s, background .15s; flex-shrink: 0;
+    }
+    .qty-btn:hover { border-color: var(--brand); background: var(--brand-pale); }
+    .qty-btn.remove:hover { border-color: var(--danger); background: #fff0f3; color: var(--danger); }
+    .qty-display {
+      font-family: 'Syne', sans-serif; font-weight: 800; font-size: .9rem;
+      color: var(--text); min-width: 22px; text-align: center;
+    }
+    .ticket-item-subtotal {
+      font-family: 'Syne', sans-serif; font-weight: 800; font-size: .85rem;
+      color: var(--brand); white-space: nowrap; flex-shrink: 0;
+    }
+
+    /* ── FOOTER TICKET (cobro) ── */
+    .ticket-footer {
+      padding: 10px 14px; border-top: 1px solid var(--border); background: white;
+      display: flex; flex-direction: column; gap: 8px; flex-shrink: 0;
+    }
+    .ticket-totals { display: flex; flex-direction: column; gap: 2px; }
+    .ticket-total-row {
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: .75rem; color: var(--muted);
+    }
+    .ticket-total-row.main {
+      font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.1rem;
+      color: var(--text); padding-top: 5px; border-top: 1px solid var(--border);
+    }
+    .ticket-total-row.main span:last-child { color: var(--brand); }
+
+    .ticket-cliente { display: flex; flex-direction: column; gap: 4px; }
+    .ticket-cliente-label { font-size: .58rem; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); }
+    .ticket-cliente-input {
+      background: var(--bg3); border: 1.5px solid var(--border); border-radius: 8px;
+      color: var(--text); font-family: 'JetBrains Mono', monospace; font-size: .82rem;
+      padding: 8px 12px; outline: none; transition: border-color .2s;
+    }
+    .ticket-cliente-input:focus { border-color: var(--brand); box-shadow: 0 0 0 3px rgba(0,86,179,.10); }
+
+    .ticket-metodo-pago { display: flex; gap: 5px; flex-wrap: wrap; }
+    .metodo-btn {
+      flex: 1; min-width: 60px; padding: 7px 4px; border-radius: 8px;
+      border: 1.5px solid var(--border); background: var(--bg3);
+      font-family: 'Syne', sans-serif; font-weight: 700; font-size: .62rem;
+      color: var(--muted); cursor: pointer; transition: all .15s; text-align: center;
+    }
+    .metodo-btn:hover { border-color: var(--brand); color: var(--brand); background: var(--brand-pale); }
+    .metodo-btn.selected { border-color: var(--brand); background: var(--brand); color: white; }
+
+    .btn-cobrar {
+      width: 100%; padding: 16px; background: var(--success); color: white;
+      font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.05rem;
+      letter-spacing: 1px; border: none; border-radius: 12px; cursor: pointer;
+      transition: background .15s, transform .1s;
+      box-shadow: 0 4px 16px rgba(26,172,94,.4);
+    }
+    .btn-cobrar:hover { background: #148f4e; }
+    .btn-cobrar:active { transform: scale(.98); }
+    .btn-cobrar:disabled { opacity: .45; cursor: not-allowed; }
+
+    .caja-feedback {
+      padding: 8px 12px; border-radius: 8px; font-size: .78rem;
+      display: none; border-left: 4px solid; text-align: center;
+    }
+    .caja-feedback.ok  { display: block; background: #edfff6; border-color: var(--success); color: #0d7a3e; }
+    .caja-feedback.err { display: block; background: #fff0f3; border-color: var(--danger);  color: var(--danger); }
+
+    /* ══ PRODUCTOS PANEL (abajo en mobile) ══ */
     .caja-productos-panel {
       display: flex; flex-direction: column;
-      overflow: hidden;
+      flex: 1; overflow: hidden;
+      min-height: 0;
     }
+    @media (min-width: 900px) {
+      .caja-productos-panel { order: 1; border-right: 1px solid var(--border); }
+    }
+
+    /* Barra de búsqueda con scanner */
     .caja-search-bar {
-      padding: 12px 16px; background: white; border-bottom: 1px solid var(--border);
-      position: sticky; top: 58px; z-index: 8;
-      display: flex; gap: 10px; align-items: center;
+      padding: 10px 14px; background: white; border-bottom: 1px solid var(--border);
+      display: flex; gap: 8px; align-items: center; flex-shrink: 0;
     }
     .caja-search-wrap { position: relative; flex: 1; }
-    .caja-search-wrap svg { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--muted); pointer-events: none; }
+    .caja-search-wrap .search-icon {
+      position: absolute; left: 11px; top: 50%; transform: translateY(-50%);
+      color: var(--muted); pointer-events: none;
+    }
     .caja-search-input {
       width: 100%; background: var(--bg3); border: 1.5px solid var(--border);
       border-radius: 10px; color: var(--text); font-family: 'JetBrains Mono', monospace;
-      font-size: .85rem; padding: 10px 14px 10px 36px; outline: none;
+      font-size: .88rem; padding: 11px 14px 11px 36px; outline: none;
       transition: border-color .2s;
     }
     .caja-search-input:focus { border-color: var(--brand); box-shadow: 0 0 0 3px rgba(0,86,179,.10); }
     .caja-search-input::placeholder { color: var(--muted); }
 
-    .caja-prod-grid {
-      flex: 1; overflow-y: auto; padding: 14px 16px 100px;
-      display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px;
+    /* Botón scanner QR */
+    .btn-scanner-qr {
+      width: 44px; height: 44px; flex-shrink: 0;
+      background: var(--brand); border: none; border-radius: 10px;
+      color: white; font-size: 1.2rem;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: background .15s, transform .1s;
+      box-shadow: 0 2px 8px rgba(0,86,179,.3);
     }
-    @media (min-width: 480px) { .caja-prod-grid { grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); } }
+    .btn-scanner-qr:hover { background: var(--brand-dk); }
+    .btn-scanner-qr:active { transform: scale(.95); }
+
+    /* Modal scanner QR */
+    .scanner-overlay {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,.92);
+      z-index: 300; flex-direction: column; align-items: center; justify-content: center;
+    }
+    .scanner-overlay.show { display: flex; }
+    .scanner-box {
+      position: relative; width: min(90vw, 340px);
+    }
+    .scanner-title {
+      font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1rem;
+      color: white; text-align: center; margin-bottom: 16px; letter-spacing: -0.5px;
+    }
+    .scanner-video-wrap {
+      position: relative; width: 100%; aspect-ratio: 1;
+      border-radius: 16px; overflow: hidden;
+      border: 2px solid var(--brand);
+      box-shadow: 0 0 0 4px rgba(0,86,179,.3);
+    }
+    #scanner-video {
+      width: 100%; height: 100%; object-fit: cover; display: block;
+    }
+    .scanner-crosshair {
+      position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+      pointer-events: none;
+    }
+    .scanner-crosshair::before, .scanner-crosshair::after {
+      content: '';
+      position: absolute;
+      width: 50%; height: 50%;
+      border: 3px solid rgba(255,255,255,.8);
+    }
+    .scanner-crosshair::before { top: 12%; left: 12%; border-right: none; border-bottom: none; border-radius: 4px 0 0 0; }
+    .scanner-crosshair::after  { bottom: 12%; right: 12%; border-left: none; border-top: none; border-radius: 0 0 4px 0; }
+    .scanner-line {
+      position: absolute; left: 14%; right: 14%; height: 2px;
+      background: var(--brand); border-radius: 1px;
+      animation: scanLine 2s ease-in-out infinite;
+      box-shadow: 0 0 8px var(--brand);
+    }
+    @keyframes scanLine {
+      0%   { top: 20%; }
+      50%  { top: 78%; }
+      100% { top: 20%; }
+    }
+    .scanner-hint {
+      font-size: .75rem; color: rgba(255,255,255,.65); text-align: center;
+      margin-top: 12px; letter-spacing: 1px;
+    }
+    .scanner-result-bar {
+      margin-top: 10px; padding: 10px 14px; background: rgba(255,255,255,.1);
+      border-radius: 10px; color: white; font-size: .8rem; text-align: center;
+      min-height: 40px; display: flex; align-items: center; justify-content: center;
+    }
+    .btn-scanner-close {
+      margin-top: 16px; padding: 12px 32px;
+      background: rgba(255,255,255,.15); border: 1.5px solid rgba(255,255,255,.3);
+      border-radius: 10px; color: white; font-family: 'Syne', sans-serif;
+      font-weight: 700; font-size: .85rem; cursor: pointer; transition: background .15s;
+    }
+    .btn-scanner-close:hover { background: rgba(255,255,255,.25); }
+
+    /* Grilla de productos */
+    .caja-prod-grid {
+      flex: 1; overflow-y: auto; padding: 10px 12px 20px;
+      display: grid; gap: 8px;
+      /* Mobile: 2 columnas compactas */
+      grid-template-columns: repeat(2, 1fr);
+    }
+    @media (min-width: 420px) { .caja-prod-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (min-width: 640px) { .caja-prod-grid { grid-template-columns: repeat(3, 1fr); } }
+    @media (min-width: 900px) { .caja-prod-grid { grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); padding: 14px 16px 30px; } }
 
     .caja-prod-card {
       background: white; border: 1.5px solid var(--border); border-radius: 12px;
-      padding: 14px 14px 12px; cursor: pointer; transition: border-color .15s, box-shadow .15s, transform .1s;
-      animation: fadeUp .3s ease both; display: flex; flex-direction: column; gap: 6px;
-      position: relative; user-select: none;
+      padding: 12px 10px 10px; cursor: pointer;
+      transition: border-color .12s, box-shadow .12s, transform .08s;
+      animation: fadeUp .25s ease both; display: flex; flex-direction: column; gap: 4px;
+      position: relative; user-select: none; -webkit-user-select: none;
+      /* Touch-friendly tap area */
+      min-height: 80px;
     }
-    .caja-prod-card:hover { border-color: var(--brand); box-shadow: 0 4px 18px rgba(0,86,179,.13); }
-    .caja-prod-card:active { transform: scale(.98); }
+    .caja-prod-card:active { transform: scale(.96); background: var(--brand-pale); border-color: var(--brand); }
+    .caja-prod-card.en-carrito { border-color: var(--brand); background: var(--brand-pale); }
 
     .caja-prod-nombre {
-      font-family: 'Syne', sans-serif; font-weight: 700; font-size: .88rem;
-      color: var(--text); line-height: 1.3;
+      font-family: 'Syne', sans-serif; font-weight: 700; font-size: .82rem;
+      color: var(--text); line-height: 1.25;
     }
-    .caja-prod-marca { font-size: .68rem; color: var(--muted); }
+    .caja-prod-marca { font-size: .62rem; color: var(--muted); }
     .caja-prod-precio {
-      font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.05rem;
-      color: var(--brand); margin-top: 2px;
+      font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1rem;
+      color: var(--brand); margin-top: auto;
     }
-    .caja-prod-bonif { font-size: .7rem; color: var(--accent2); font-weight: 600; }
+    .caja-prod-bonif { font-size: .65rem; color: var(--accent2); font-weight: 600; }
     .caja-add-badge {
-      position: absolute; top: 8px; right: 10px;
+      position: absolute; top: 7px; right: 8px;
       background: var(--brand); color: white;
-      border-radius: 20px; padding: 1px 7px; font-size: .65rem; font-weight: 700;
+      border-radius: 20px; padding: 1px 6px; font-size: .6rem; font-weight: 700;
       display: none;
     }
     .caja-prod-card.en-carrito .caja-add-badge { display: inline-block; }
-    .caja-prod-card.en-carrito { border-color: var(--brand); background: var(--brand-pale); }
 
     /* Panel derecho - carrito / ticket */
     .caja-ticket-panel {
@@ -1411,6 +1644,193 @@
     }
     .btn-ok-cerrar:hover { background: var(--brand-dk); }
 
+    /* ══════════════ DASHBOARD ══════════════ */
+    #screen-dashboard { background: var(--bg); }
+
+    .dash-topbar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 16px; height: 58px; background: var(--brand);
+      position: sticky; top: 0; z-index: 10;
+      box-shadow: 0 2px 12px rgba(0,86,179,.25);
+    }
+    .dash-topbar-title { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.05rem; color: white; letter-spacing: -0.5px; }
+
+    .dash-filters-bar {
+      display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+      padding: 10px 16px; background: white; border-bottom: 1px solid var(--border);
+      position: sticky; top: 58px; z-index: 9;
+      box-shadow: 0 1px 4px rgba(0,86,179,.06);
+    }
+    .dash-filter-label { font-size: .6rem; color: var(--muted); letter-spacing: 1.5px; text-transform: uppercase; white-space: nowrap; }
+    .dash-filter-btn {
+      background: var(--bg3); border: 1.5px solid var(--border); border-radius: 20px;
+      color: var(--muted); font-family: 'Syne', sans-serif; font-weight: 700;
+      font-size: .65rem; padding: 5px 12px; cursor: pointer; transition: all .15s; white-space: nowrap;
+    }
+    .dash-filter-btn:hover { border-color: var(--brand); color: var(--brand); }
+    .dash-filter-btn.active { background: var(--brand); border-color: var(--brand); color: white; }
+
+    .dash-date-inputs { display: flex; align-items: center; gap: 6px; }
+    .dash-date-input {
+      background: var(--bg3); border: 1.5px solid var(--border); border-radius: 8px;
+      color: var(--text); font-family: 'JetBrains Mono', monospace;
+      font-size: .72rem; padding: 5px 9px; outline: none; transition: border-color .2s;
+    }
+    .dash-date-input:focus { border-color: var(--brand); }
+
+    .btn-dash-reload {
+      background: var(--brand-pale); border: 1.5px solid var(--brand-mid); border-radius: 8px;
+      color: var(--brand); font-family: 'Syne', sans-serif; font-weight: 700;
+      font-size: .65rem; padding: 6px 12px; cursor: pointer; white-space: nowrap;
+      transition: background .15s; margin-left: auto;
+    }
+    .btn-dash-reload:hover { background: var(--brand-mid); }
+
+    .dash-body { padding: 14px 16px 80px; overflow-y: auto; }
+
+    /* KPI cards */
+    .dash-kpi-grid {
+      display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 16px;
+    }
+    @media (min-width: 600px) { .dash-kpi-grid { grid-template-columns: repeat(4, 1fr); } }
+
+    .dash-kpi {
+      background: white; border: 1.5px solid var(--border); border-radius: 12px;
+      padding: 14px 16px; animation: fadeUp .3s ease both;
+      position: relative; overflow: hidden;
+    }
+    .dash-kpi::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+      background: var(--brand);
+    }
+    .dash-kpi.green::before { background: var(--success); }
+    .dash-kpi.orange::before { background: var(--warn); }
+    .dash-kpi.red::before { background: var(--danger); }
+
+    .dash-kpi-icon { font-size: 1.3rem; margin-bottom: 6px; }
+    .dash-kpi-label { font-size: .58rem; color: var(--muted); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 4px; }
+    .dash-kpi-value { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.3rem; color: var(--text); line-height: 1.1; }
+    .dash-kpi-value.blue { color: var(--brand); }
+    .dash-kpi-value.green { color: var(--success); }
+    .dash-kpi-value.orange { color: var(--warn); }
+    .dash-kpi-sub { font-size: .65rem; color: var(--muted); margin-top: 3px; }
+
+    /* Section header */
+    .dash-section-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin: 18px 0 10px; gap: 8px;
+    }
+    .dash-section-title {
+      font-family: 'Syne', sans-serif; font-weight: 800; font-size: .88rem;
+      color: var(--text); letter-spacing: -0.3px;
+    }
+    .dash-section-badge {
+      font-size: .6rem; background: var(--brand-pale); border: 1px solid var(--brand-mid);
+      color: var(--brand); border-radius: 20px; padding: 2px 8px; white-space: nowrap;
+    }
+
+    /* Ranking table */
+    .dash-ranking {
+      background: white; border: 1.5px solid var(--border); border-radius: 12px;
+      overflow: hidden; margin-bottom: 16px;
+    }
+    .dash-rank-row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 11px 14px; border-bottom: 1px solid var(--border);
+      animation: fadeUp .3s ease both; transition: background .12s;
+    }
+    .dash-rank-row:last-child { border-bottom: none; }
+    .dash-rank-row:hover { background: var(--brand-pale); }
+
+    .dash-rank-pos {
+      font-family: 'Syne', sans-serif; font-weight: 800; font-size: .85rem;
+      color: var(--muted); min-width: 24px; text-align: center;
+    }
+    .dash-rank-pos.gold   { color: #c8960c; }
+    .dash-rank-pos.silver { color: #7a8fa8; }
+    .dash-rank-pos.bronze { color: #a05a2c; }
+
+    .dash-rank-bar-wrap { flex: 1; min-width: 0; }
+    .dash-rank-name {
+      font-family: 'Syne', sans-serif; font-weight: 700; font-size: .82rem;
+      color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      margin-bottom: 4px;
+    }
+    .dash-rank-bar-bg {
+      height: 5px; background: var(--bg3); border-radius: 3px; overflow: hidden;
+    }
+    .dash-rank-bar-fill {
+      height: 100%; background: var(--brand); border-radius: 3px;
+      transition: width .5s cubic-bezier(.4,0,.2,1);
+    }
+
+    .dash-rank-stats { text-align: right; flex-shrink: 0; }
+    .dash-rank-total { font-family: 'Syne', sans-serif; font-weight: 800; font-size: .9rem; color: var(--brand); }
+    .dash-rank-units { font-size: .62rem; color: var(--muted); margin-top: 1px; }
+
+    /* Chart bars (CSS only) */
+    .dash-chart {
+      background: white; border: 1.5px solid var(--border); border-radius: 12px;
+      padding: 16px; margin-bottom: 16px;
+    }
+    .dash-chart-title { font-size: .62rem; color: var(--muted); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 14px; }
+    .dash-bars { display: flex; align-items: flex-end; gap: 6px; height: 110px; }
+    .dash-bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+    .dash-bar-val { font-size: .55rem; color: var(--brand); font-weight: 700; text-align: center; white-space: nowrap; }
+    .dash-bar-body {
+      width: 100%; background: var(--brand); border-radius: 4px 4px 0 0;
+      min-height: 3px; transition: height .5s ease;
+    }
+    .dash-bar-label { font-size: .55rem; color: var(--muted); text-align: center; white-space: nowrap; overflow: hidden; max-width: 100%; }
+
+    /* Payment methods */
+    .dash-metodos-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 16px;
+    }
+    .dash-metodo-card {
+      background: white; border: 1.5px solid var(--border); border-radius: 10px;
+      padding: 12px 10px; text-align: center; animation: fadeUp .3s ease both;
+    }
+    .dash-metodo-icon { font-size: 1.3rem; margin-bottom: 4px; }
+    .dash-metodo-name { font-size: .6rem; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 2px; }
+    .dash-metodo-val { font-family: 'Syne', sans-serif; font-weight: 800; font-size: .88rem; color: var(--text); }
+    .dash-metodo-pct { font-size: .62rem; color: var(--brand); }
+
+    /* Devices */
+    .dash-devices { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+    .dash-device-badge {
+      background: white; border: 1.5px solid var(--border); border-radius: 8px;
+      padding: 8px 12px; display: flex; align-items: center; gap: 6px;
+    }
+    .dash-device-icon { font-size: .9rem; }
+    .dash-device-name { font-size: .7rem; color: var(--muted); }
+    .dash-device-val { font-family: 'Syne', sans-serif; font-weight: 800; font-size: .8rem; color: var(--text); }
+
+    /* Usuarios ranking */
+    .dash-user-row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 14px; border-bottom: 1px solid var(--border); background: white;
+    }
+    .dash-user-row:first-child { border-radius: 12px 12px 0 0; }
+    .dash-user-row:last-child { border-radius: 0 0 12px 12px; border-bottom: none; }
+    .dash-user-avatar {
+      width: 30px; height: 30px; border-radius: 50%; background: var(--brand-pale);
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Syne', sans-serif; font-weight: 800; font-size: .72rem; color: var(--brand);
+      flex-shrink: 0;
+    }
+    .dash-user-name { font-size: .8rem; color: var(--text); flex: 1; }
+    .dash-user-total { font-family: 'Syne', sans-serif; font-weight: 700; font-size: .85rem; color: var(--brand); }
+    .dash-user-txns { font-size: .62rem; color: var(--muted); }
+
+    .dash-loading { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: 64px 20px; color: var(--muted); font-size: .8rem; letter-spacing: 2px; }
+
+    /* Ticket promedio highlight */
+    .dash-highlight-row {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px;
+    }
+    @media (min-width: 600px) { .dash-highlight-row { grid-template-columns: repeat(3, 1fr); } }
+
   </style>
 </head>
 <body>
@@ -1461,6 +1881,7 @@
         <button class="btn-nuevo-producto" id="btn-nuevo-producto" style="display:none" >+ NUEVO</button>
         <button class="btn-stock" id="btn-stock">📦 STOCK</button>
         <button class="btn-caja" id="btn-caja">🛒 CAJA</button>
+        <button class="btn-topbar accent" id="btn-dashboard">📊 PANEL</button>
         <button class="btn-logout" id="btn-logout">SALIR</button>
       </div>
     </div>
@@ -1634,6 +2055,38 @@
     </div>
   </div>
 
+  <!-- ══════════════ DASHBOARD ══════════════ -->
+  <div id="screen-dashboard" class="screen">
+
+    <div class="dash-topbar">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div class="dash-topbar-title">📊 PANEL DE CONTROL</div>
+      </div>
+      <button class="btn-back-app" id="btn-back-dashboard">← VOLVER</button>
+    </div>
+
+    <!-- Filtros -->
+    <div class="dash-filters-bar">
+      <span class="dash-filter-label">Período:</span>
+      <button class="dash-filter-btn active" data-period="today" onclick="setDashPeriod(this,'today')">HOY</button>
+      <button class="dash-filter-btn" data-period="week" onclick="setDashPeriod(this,'week')">SEMANA</button>
+      <button class="dash-filter-btn" data-period="month" onclick="setDashPeriod(this,'month')">MES</button>
+      <button class="dash-filter-btn" data-period="custom" onclick="setDashPeriod(this,'custom')">RANGO</button>
+      <div class="dash-date-inputs" id="dash-custom-dates" style="display:none">
+        <input class="dash-date-input" type="date" id="dash-date-from" />
+        <span style="font-size:.7rem;color:var(--muted)">→</span>
+        <input class="dash-date-input" type="date" id="dash-date-to" />
+      </div>
+      <button class="btn-dash-reload" onclick="cargarDashboard()">↻ ACTUALIZAR</button>
+    </div>
+
+    <!-- Cuerpo scrollable -->
+    <div class="dash-body" id="dash-body">
+      <div class="dash-loading"><div class="spinner"></div>CARGANDO DATOS</div>
+    </div>
+
+  </div>
+
   <!-- ══════════════ ETIQUETA PRINT ══════════════ -->
   <div id="etiqueta-print">
     <div class="etiqueta" id="etiqueta-contenido"></div>
@@ -1763,33 +2216,21 @@
     <!-- TAB VENTA -->
     <div id="caja-tab-venta" class="caja-layout">
 
-      <!-- Panel productos -->
-      <div class="caja-productos-panel">
-        <div class="caja-search-bar">
-          <div class="caja-search-wrap">
-            <svg width="15" height="15" fill="currentColor" viewBox="0 0 16 16">
-              <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.099zm-5.242 1.656a5.5 5.5 0 1 1 0-11 5.5 5.5 0 0 1 0 11z"/>
-            </svg>
-            <input class="caja-search-input" id="caja-search" type="search" placeholder="Buscar producto para agregar..." />
-          </div>
-        </div>
-        <div class="caja-prod-grid" id="caja-prod-grid">
-          <div class="loading"><div class="spinner"></div>CARGANDO</div>
-        </div>
-      </div>
-
-      <!-- Panel ticket / carrito -->
+      <!-- ── TICKET PANEL (arriba en mobile) ── -->
       <div class="caja-ticket-panel">
         <div class="ticket-header">
-          <div class="ticket-title">🧾 TICKET</div>
+          <div class="ticket-title">
+            🧾 TICKET
+            <span class="ticket-count-badge" id="ticket-count-badge">0</span>
+          </div>
           <button class="ticket-clear" id="btn-vaciar-caja" onclick="vaciarCarrito()">VACIAR</button>
         </div>
 
         <div class="ticket-items" id="ticket-items">
           <div class="ticket-empty" id="ticket-empty">
-            <div style="font-size:1.6rem">🛒</div>
+            <div style="font-size:1.5rem">🛒</div>
             <div>SIN PRODUCTOS</div>
-            <div style="font-size:.7rem;letter-spacing:1px">Tocá un producto para agregar</div>
+            <div style="font-size:.65rem;letter-spacing:1px;opacity:.7">Tocá un producto para agregar</div>
           </div>
         </div>
 
@@ -1811,16 +2252,18 @@
 
           <div class="ticket-cliente">
             <div class="ticket-cliente-label">Descripción / Cliente (opcional)</div>
-            <input class="ticket-cliente-input" id="caja-descripcion" type="text" placeholder="Ej: Venta mostrador, Juan García..." maxlength="80" />
+            <input class="ticket-cliente-input" id="caja-descripcion" type="text"
+              placeholder="Ej: Juan García, mostrador..." maxlength="80"
+              autocomplete="off" autocorrect="off" spellcheck="false" />
           </div>
 
           <div>
-            <div class="ticket-cliente-label" style="margin-bottom:6px">Método de pago</div>
+            <div class="ticket-cliente-label" style="margin-bottom:5px">Método de pago</div>
             <div class="ticket-metodo-pago">
-              <button class="metodo-btn selected" data-metodo="Efectivo" onclick="selectMetodo(this)">💵 Efectivo</button>
-              <button class="metodo-btn" data-metodo="Débito" onclick="selectMetodo(this)">💳 Débito</button>
-              <button class="metodo-btn" data-metodo="Crédito" onclick="selectMetodo(this)">💳 Crédito</button>
-              <button class="metodo-btn" data-metodo="Transferencia" onclick="selectMetodo(this)">📲 Transfer.</button>
+              <button class="metodo-btn selected" data-metodo="Efectivo" onclick="selectMetodo(this)">💵 Efect.</button>
+              <button class="metodo-btn" data-metodo="Débito" onclick="selectMetodo(this)">💳 Déb.</button>
+              <button class="metodo-btn" data-metodo="Crédito" onclick="selectMetodo(this)">💳 Créd.</button>
+              <button class="metodo-btn" data-metodo="Transferencia" onclick="selectMetodo(this)">📲 Trans.</button>
             </div>
           </div>
 
@@ -1829,6 +2272,41 @@
           <button class="btn-cobrar" id="btn-cobrar" onclick="procesarVenta()">
             COBRAR — <span id="btn-cobrar-total">$0</span>
           </button>
+        </div>
+      </div>
+
+      <!-- ── PRODUCTOS PANEL (abajo en mobile) ── -->
+      <div class="caja-productos-panel">
+
+        <!-- Barra búsqueda + scanner -->
+        <div class="caja-search-bar">
+          <div class="caja-search-wrap">
+            <svg class="search-icon" width="15" height="15" fill="currentColor" viewBox="0 0 16 16">
+              <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.099zm-5.242 1.656a5.5 5.5 0 1 1 0-11 5.5 5.5 0 0 1 0 11z"/>
+            </svg>
+            <input class="caja-search-input" id="caja-search" type="search"
+              placeholder="Buscar o escaneá código..." autocomplete="off"
+              inputmode="search" />
+          </div>
+          <!-- Botón scanner QR/barcode -->
+          <button class="btn-scanner-qr" id="btn-scanner-qr" onclick="abrirScanner()" title="Escanear código">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 7V5a2 2 0 0 1 2-2h2"/>
+              <path d="M17 3h2a2 2 0 0 1 2 2v2"/>
+              <path d="M21 17v2a2 2 0 0 1-2 2h-2"/>
+              <path d="M7 21H5a2 2 0 0 1-2-2v-2"/>
+              <line x1="7" y1="12" x2="7" y2="12.01"/>
+              <line x1="12" y1="7" x2="12" y2="12"/>
+              <line x1="17" y1="12" x2="17" y2="12.01"/>
+              <line x1="12" y1="17" x2="12" y2="17.01"/>
+              <rect x="9" y="9" width="6" height="6" rx="1"/>
+            </svg>
+          </button>
+        </div>
+
+        <!-- Grid productos -->
+        <div class="caja-prod-grid" id="caja-prod-grid">
+          <div class="loading"><div class="spinner"></div>CARGANDO</div>
         </div>
       </div>
     </div>
@@ -1846,6 +2324,22 @@
 
   </div>
 
+  <!-- ══════════════ SCANNER QR OVERLAY ══════════════ -->
+  <div class="scanner-overlay" id="scanner-overlay">
+    <div class="scanner-box">
+      <div class="scanner-title">📷 ESCANEAR CÓDIGO</div>
+      <div class="scanner-video-wrap">
+        <video id="scanner-video" playsinline autoplay muted></video>
+        <div class="scanner-crosshair">
+          <div class="scanner-line"></div>
+        </div>
+      </div>
+      <div class="scanner-result-bar" id="scanner-result">Apuntá al código de barras o QR del producto</div>
+      <div class="scanner-hint">Compatible con códigos de barra EAN, QR y DataMatrix</div>
+      <button class="btn-scanner-close" onclick="cerrarScanner()">✕ CERRAR</button>
+    </div>
+  </div>
+
   <!-- Modal venta exitosa -->
   <div class="venta-ok-overlay" id="venta-ok-overlay">
     <div class="venta-ok-modal">
@@ -1859,10 +2353,10 @@
 
   <script>
     const API = "https://mamoll.com";
+    const API_MONGO = "https://soft.mamoll.com/~pulpo/api-mongo";
 
     let token    = localStorage.getItem("mamoll_token") || null;
     let username = localStorage.getItem("mamoll_user")  || null;
-    let correoUsuario = localStorage.getItem("mamoll_email") || null;
     let allProductos = [];
     let empresaUsuario = "";
 
@@ -1906,10 +2400,8 @@
 
         token    = data.token;
         username = user;
-        correoUsuario = data.email || data.correo || data.correoUsuario || (user + "@mamoll.com");
         localStorage.setItem("mamoll_token", token);
         localStorage.setItem("mamoll_user", username);
-        localStorage.setItem("mamoll_email", correoUsuario);
         enterApp();
 
       } catch {
@@ -1939,10 +2431,9 @@
 
     // ── LOGOUT ───────────────────────────────────────────
     document.getElementById("btn-logout").addEventListener("click", () => {
-      token = null; username = null; correoUsuario = null; allProductos = [];
+      token = null; username = null; allProductos = [];
       localStorage.removeItem("mamoll_token");
       localStorage.removeItem("mamoll_user");
-      localStorage.removeItem("mamoll_email");
       document.getElementById("inp-pass").value = "";
       document.getElementById("login-error").classList.remove("show");
       showScreen("screen-login");
@@ -1966,7 +2457,12 @@
         }
 
         const data = await res.json();
-        allProductos = Array.isArray(data) ? data : [];
+        allProductos = (Array.isArray(data) ? data : []).map(p => ({
+          ...p,
+          priceProductos: p.priceProductos ?? p.precio ?? p.price ?? p.precioProductos ?? 0,
+          precioVentaBonificadoFinalProductos: p.precioVentaBonificadoFinalProductos ?? p.precioBonificado ?? p.bonif ?? 0,
+          costeProductos: p.costeProductos ?? p.costo ?? p.cost ?? 0,
+        }));
         if (allProductos.length > 0 && allProductos[0].nameEmpresasPaises) {
           empresaUsuario = allProductos[0].nameEmpresasPaises;
         }
@@ -2263,7 +2759,7 @@
           return `<tr>
             <td class="td-nombre">${prod.nameProductos||"—"}</td>
             <td style="color:var(--muted)">${prod.marcaProductos||"—"}</td>
-            <td style="color:var(--brand);font-weight:600">${fmt(parseFloat(prod.priceProductos ?? prod.precio ?? 0) || 0)}</td>
+            <td style="color:var(--brand);font-weight:600">${fmt(prod.priceProductos)}</td>
             <td style="font-size:.72rem;color:var(--muted)">${ubic}</td>
             <td><input class="cant-input" type="number" value="${cant}" data-key="${key}" data-field="cantidad" onchange="actualizarDesdeTabla(this)"/></td>
             <td><input class="umbral-input" type="number" value="${umbral}" data-key="${key}" data-field="umbral" onchange="actualizarDesdeTabla(this)"/></td>
@@ -2728,10 +3224,18 @@
       return n.toLocaleString("es-AR", { minimumFractionDigits: 0, maximumFractionDigits: 0 });
     }
 
+    // Convierte precio en string formato argentino "$ 5,00" / "46.000,00" o número a float
+    function parsePrecio(val) {
+      if (val == null || val === "") return 0;
+      if (typeof val === "number") return val;
+      const limpio = String(val).replace(/\$/g, "").replace(/\s/g, "").replace(/\./g, "").replace(",", ".");
+      const n = parseFloat(limpio);
+      return isNaN(n) ? 0 : n;
+    }
+
     function fmt(val) {
       if (val == null || val === "") return "—";
-      const n = parseFloat(val);
-      if (isNaN(n)) return val;
+      const n = parsePrecio(val);
       return "$" + n.toLocaleString("es-AR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
 
@@ -2968,8 +3472,8 @@
             <span class="caja-add-badge">×${cant}</span>
             <div class="caja-prod-nombre">${p.nameProductos || "—"}</div>
             <div class="caja-prod-marca">${p.marcaProductos || ""}</div>
-            <div class="caja-prod-precio">${fmt(getPrecio(p))}</div>
-            ${parseFloat(p.precioVentaBonificadoFinalProductos) ? `<div class="caja-prod-bonif">Bonif: ${fmt(parseFloat(p.precioVentaBonificadoFinalProductos))}</div>` : ""}
+            <div class="caja-prod-precio">${fmt(p.priceProductos)}</div>
+            ${p.precioVentaBonificadoFinalProductos ? `<div class="caja-prod-bonif">Bonif: ${fmt(p.precioVentaBonificadoFinalProductos)}</div>` : ""}
           </div>`;
       }).join("");
     }
@@ -3011,11 +3515,6 @@
       setCajaFeedback("", "");
     }
 
-    function getPrecio(p) {
-      const v = parseFloat(p.priceProductos ?? p.precio ?? 0);
-      return isNaN(v) ? 0 : v;
-    }
-
     function actualizarTicket() {
       const itemsEl = document.getElementById("ticket-items");
       const emptyEl = document.getElementById("ticket-empty");
@@ -3031,7 +3530,7 @@
         subtotalEl.textContent = "$0";
         countEl.textContent = "0";
         totalEl.textContent = "$0";
-        btnTotal.textContent = "$0";
+        btnTotal.textContent = "COBRAR — $0";
         return;
       }
 
@@ -3040,7 +3539,7 @@
       // Rebuild items
       itemsEl.querySelectorAll(".ticket-item").forEach(e => e.remove());
       carrito.forEach(c => {
-        const precio = getPrecio(c.producto);
+        const precio = parsePrecio(c.producto.priceProductos);
         const subtotal = precio * c.cantidad;
         const div = document.createElement("div");
         div.className = "ticket-item";
@@ -3061,11 +3560,14 @@
       });
 
       const totalQty = carrito.reduce((a, c) => a + c.cantidad, 0);
-      const totalPrecio = carrito.reduce((a, c) => a + getPrecio(c.producto) * c.cantidad, 0);
+      const totalPrecio = carrito.reduce((a, c) => a + parsePrecio(c.producto.priceProductos) * c.cantidad, 0);
       subtotalEl.textContent = fmt(totalPrecio);
       countEl.textContent = totalQty;
       totalEl.textContent = fmt(totalPrecio);
-      btnTotal.textContent = fmt(totalPrecio);
+      btnTotal.textContent = `COBRAR — ${fmt(totalPrecio)}`;
+      // Update badge
+      const badge = document.getElementById("ticket-count-badge");
+      if (badge) { badge.textContent = totalQty; badge.style.display = totalQty > 0 ? "" : "none"; }
     }
 
     function selectMetodo(btn) {
@@ -3087,7 +3589,7 @@
         return;
       }
 
-      const totalPrecio = carrito.reduce((a, c) => a + getPrecio(c.producto) * c.cantidad, 0);
+      const totalPrecio = carrito.reduce((a, c) => a + parsePrecio(c.producto.priceProductos) * c.cantidad, 0);
       const totalQty    = carrito.reduce((a, c) => a + c.cantidad, 0);
       const descripcion = document.getElementById("caja-descripcion").value.trim();
 
@@ -3107,22 +3609,23 @@
 
       try {
         const transacciones = carrito.map(c => ({
-          cantidadProductos:      c.cantidad,
-          correoUsuario:          correoUsuario || username || "",
-          descripcionDelProducto: descripcion || c.producto.descriptionProductos || c.producto.nameProductos || "",
-          dispositivoLogueado:    dispositivo,
-          empresaPais:            c.producto.nameEmpresasPaises || empresaUsuario || "Argentina",
+          id:                     parseInt(c.producto.idProductos || c.producto.id || 0),
+          cantidadProductos:      parseInt(c.cantidad),
+          correoUsuario:          String(username + "@mamoll.com"),
+          descripcionDelProducto: String(descripcion || c.producto.descriptionProductos || c.producto.nameProductos || ""),
+          dispositivoLogueado:    String(dispositivo),
+          empresaPais:            String(c.producto.nameEmpresasPaises || empresaUsuario || "Argentina"),
           enviadoaMySQL:          0,
-          fechaHoraTransaccional: new Date().toISOString(),
-          precioTotal:            Math.round(getPrecio(c.producto) * c.cantidad),
-          productoTransaccional:  c.producto.nameProductos || "",
-          usuarioDelegado:        username || "",
+          fechaHoraTransaccional: new Date(),
+          precioTotal:            parseInt(Math.round(parsePrecio(c.producto.priceProductos) * c.cantidad)),
+          productoTransaccional:  String(c.producto.nameProductos || ""),
+          usuarioDelegado:        String(username || ""),
         }));
 
         let errores = 0;
-        let mensajeError = "";
+        let primerError = null;
         for (const t of transacciones) {
-          const res = await fetch("http://185.139.1.178:4201/transacciones", {
+         const res = await fetch(`${API_MONGO}/transacciones`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
@@ -3132,15 +3635,20 @@
           });
           if (!res.ok) {
             errores++;
-            try {
-              const errData = await res.json();
-              mensajeError = errData.error || errData.message || `Error ${res.status}`;
-            } catch { mensajeError = `Error ${res.status}`; }
+            if (!primerError) {
+              // Si es 401, el token no es válido para esta API
+              if (res.status === 401) {
+                primerError = "Token inválido o expirado para el servidor de transacciones (401). El token de login no es reconocido por esta API.";
+              } else {
+                const errData = await res.json().catch(() => ({}));
+                primerError = errData.error || errData.message || `Error del servidor: ${res.status}`;
+              }
+            }
           }
         }
 
         if (errores > 0) {
-          setCajaFeedback(`Error al registrar: ${mensajeError}`, "err");
+          setCajaFeedback(primerError || `Se registraron ${transacciones.length - errores} de ${transacciones.length} ítems. Verificá la conexión.`, "err");
         } else {
           // Mostrar modal de éxito
           document.getElementById("vok-amount").textContent = fmt(totalPrecio);
@@ -3174,8 +3682,8 @@
       const panel = document.getElementById("historial-panel");
       panel.innerHTML = '<div class="loading"><div class="spinner"></div>CARGANDO</div>';
       try {
-        const res = await fetch("http://185.139.1.178:4201/transacciones", {
-          headers: { Authorization: `Bearer ${token}` },
+const res = await fetch(`${API_MONGO}/transacciones`, {
+            headers: { Authorization: `Bearer ${token}` },
         });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
@@ -3249,6 +3757,552 @@
     }
 
     // if already logged in, wiring done — renderCajaProductos will pull from allProductos when opening caja
+
+    // ══════════════ DASHBOARD ══════════════
+
+    let dashPeriod = "today";
+    let dashTransacciones = [];
+
+    document.getElementById("btn-dashboard").addEventListener("click", () => {
+      showScreen("screen-dashboard");
+      cargarDashboard();
+    });
+
+    document.getElementById("btn-back-dashboard").addEventListener("click", () => {
+      showScreen("screen-app");
+    });
+
+    function setDashPeriod(btn, period) {
+      document.querySelectorAll(".dash-filter-btn").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      dashPeriod = period;
+      const customDates = document.getElementById("dash-custom-dates");
+      if (period === "custom") {
+        customDates.style.display = "flex";
+        // Default range: last 30 days
+        const today = new Date();
+        const from  = new Date(); from.setDate(today.getDate() - 30);
+        document.getElementById("dash-date-from").value = from.toISOString().slice(0,10);
+        document.getElementById("dash-date-to").value   = today.toISOString().slice(0,10);
+      } else {
+        customDates.style.display = "none";
+        cargarDashboard();
+      }
+    }
+
+    function getDashDateRange() {
+      const now = new Date();
+      let from, to;
+      to = new Date(now); to.setHours(23,59,59,999);
+
+      if (dashPeriod === "today") {
+        from = new Date(now); from.setHours(0,0,0,0);
+      } else if (dashPeriod === "week") {
+        from = new Date(now); from.setDate(now.getDate() - 6); from.setHours(0,0,0,0);
+      } else if (dashPeriod === "month") {
+        from = new Date(now); from.setDate(now.getDate() - 29); from.setHours(0,0,0,0);
+      } else if (dashPeriod === "custom") {
+        const fv = document.getElementById("dash-date-from").value;
+        const tv = document.getElementById("dash-date-to").value;
+        from = fv ? new Date(fv + "T00:00:00") : new Date(now.getFullYear(), now.getMonth(), 1);
+        to   = tv ? new Date(tv + "T23:59:59") : to;
+      }
+      return { from, to };
+    }
+
+    async function cargarDashboard() {
+      const body = document.getElementById("dash-body");
+      body.innerHTML = '<div class="dash-loading"><div class="spinner"></div>CARGANDO DATOS</div>';
+      try {
+        const res = await fetch(`${API_MONGO}/transacciones`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        dashTransacciones = Array.isArray(data) ? data : (data.data || []);
+        renderDashboard();
+      } catch (err) {
+        body.innerHTML = `<div class="dash-loading" style="color:var(--danger)">Error al cargar datos.<br><small>${err.message}</small></div>`;
+      }
+    }
+
+    function renderDashboard() {
+      const body = document.getElementById("dash-body");
+      const { from, to } = getDashDateRange();
+
+      // Filter by period
+      const filtered = dashTransacciones.filter(t => {
+        const d = t.fechaHoraTransaccional ? new Date(t.fechaHoraTransaccional) : null;
+        return d && d >= from && d <= to;
+      });
+
+      // ── KPIs ──
+      const totalFacturado = filtered.reduce((a, t) => a + (t.precioTotal || 0), 0);
+      const totalUnidades  = filtered.reduce((a, t) => a + (t.cantidadProductos || 0), 0);
+      const totalTxns      = filtered.length;
+      const ticketPromedio = totalTxns > 0 ? totalFacturado / totalTxns : 0;
+
+      // ── Ranking productos por total $$ ──
+      const rankMap = {};
+      filtered.forEach(t => {
+        const k = t.productoTransaccional || "Desconocido";
+        if (!rankMap[k]) rankMap[k] = { nombre: k, total: 0, unidades: 0, txns: 0 };
+        rankMap[k].total    += t.precioTotal || 0;
+        rankMap[k].unidades += t.cantidadProductos || 0;
+        rankMap[k].txns     += 1;
+      });
+      const ranking = Object.values(rankMap).sort((a, b) => b.total - a.total).slice(0, 10);
+      const maxTotal = ranking.length > 0 ? ranking[0].total : 1;
+
+      // ── Por unidades vendidas ──
+      const rankUnid = Object.values(rankMap).sort((a, b) => b.unidades - a.unidades).slice(0, 5);
+
+      // ── Métodos de pago ── (not stored per transaction in visible fields, but let's try)
+      // Check if any transaction has metodoPago or similar
+      const metodoMap = {};
+      filtered.forEach(t => {
+        const m = t.metodoPago || t.metodo || "Efectivo";
+        if (!metodoMap[m]) metodoMap[m] = { count: 0, total: 0 };
+        metodoMap[m].count++;
+        metodoMap[m].total += t.precioTotal || 0;
+      });
+      const metodos = Object.entries(metodoMap).sort((a, b) => b[1].total - a[1].total);
+
+      // ── Evolución por día ──
+      const dayMap = {};
+      filtered.forEach(t => {
+        const d = t.fechaHoraTransaccional ? new Date(t.fechaHoraTransaccional) : null;
+        if (!d) return;
+        const key = d.toLocaleDateString("es-AR", { day:"2-digit", month:"2-digit" });
+        if (!dayMap[key]) dayMap[key] = 0;
+        dayMap[key] += t.precioTotal || 0;
+      });
+      // Sort days chronologically
+      const dayEntries = Object.entries(dayMap)
+        .map(([label, total]) => ({ label, total }))
+        .slice(-14); // last 14 days shown
+
+      // ── Por dispositivo ──
+      const devMap = {};
+      filtered.forEach(t => {
+        const d = t.dispositivoLogueado || "Web";
+        if (!devMap[d]) devMap[d] = 0;
+        devMap[d] += t.precioTotal || 0;
+      });
+      const devices = Object.entries(devMap).sort((a, b) => b[1] - a[1]);
+
+      // ── Por usuario ──
+      const userMap = {};
+      filtered.forEach(t => {
+        const u = t.usuarioDelegado || "—";
+        if (!userMap[u]) userMap[u] = { total: 0, txns: 0 };
+        userMap[u].total += t.precioTotal || 0;
+        userMap[u].txns  += 1;
+      });
+      const usuarios = Object.entries(userMap).sort((a, b) => b[1].total - a[1].total).slice(0, 8);
+
+      // ── Mejor hora ──
+      const horaMap = {};
+      filtered.forEach(t => {
+        const d = t.fechaHoraTransaccional ? new Date(t.fechaHoraTransaccional) : null;
+        if (!d) return;
+        const h = d.getHours();
+        if (!horaMap[h]) horaMap[h] = 0;
+        horaMap[h] += t.precioTotal || 0;
+      });
+      const mejorHora = Object.entries(horaMap).sort((a, b) => b[1] - a[1])[0];
+
+      // ── Empresa breakdown ──
+      const empMap = {};
+      filtered.forEach(t => {
+        const e = t.empresaPais || "—";
+        if (!empMap[e]) empMap[e] = { total: 0, txns: 0 };
+        empMap[e].total += t.precioTotal || 0;
+        empMap[e].txns  += 1;
+      });
+      const empresas = Object.entries(empMap).sort((a, b) => b[1].total - a[1].total).slice(0, 5);
+
+      const periodoLabel = {
+        today: "Hoy",
+        week: "Últimos 7 días",
+        month: "Últimos 30 días",
+        custom: "Rango personalizado"
+      }[dashPeriod] || "";
+
+      const devIcons = { Windows:"🖥️", iOS:"📱", Android:"📱", MacOS:"💻", Linux:"🐧", Web:"🌐" };
+      const metIcons = { Efectivo:"💵", Tarjeta:"💳", Transferencia:"🏦", QR:"📲", Débito:"💳", Crédito:"💳" };
+
+      const maxBarVal = dayEntries.reduce((m, d) => Math.max(m, d.total), 0) || 1;
+
+      body.innerHTML = `
+
+        <div style="font-size:.65rem;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:12px;padding:4px 0">
+          ${periodoLabel} · ${from.toLocaleDateString("es-AR")} → ${to.toLocaleDateString("es-AR")}
+        </div>
+
+        <!-- KPIs principales -->
+        <div class="dash-kpi-grid">
+          <div class="dash-kpi">
+            <div class="dash-kpi-icon">💰</div>
+            <div class="dash-kpi-label">Total facturado</div>
+            <div class="dash-kpi-value blue">${fmt(totalFacturado)}</div>
+            <div class="dash-kpi-sub">${totalTxns} transacciones</div>
+          </div>
+          <div class="dash-kpi green">
+            <div class="dash-kpi-icon">🎟️</div>
+            <div class="dash-kpi-label">Ticket promedio</div>
+            <div class="dash-kpi-value green">${fmt(ticketPromedio)}</div>
+            <div class="dash-kpi-sub">por venta</div>
+          </div>
+          <div class="dash-kpi orange">
+            <div class="dash-kpi-icon">📦</div>
+            <div class="dash-kpi-label">Unidades vendidas</div>
+            <div class="dash-kpi-value orange">${fmtNum(totalUnidades)}</div>
+            <div class="dash-kpi-sub">en ${totalTxns} operaciones</div>
+          </div>
+          <div class="dash-kpi">
+            <div class="dash-kpi-icon">🏷️</div>
+            <div class="dash-kpi-label">Productos distintos</div>
+            <div class="dash-kpi-value">${Object.keys(rankMap).length}</div>
+            <div class="dash-kpi-sub">referencias vendidas</div>
+          </div>
+        </div>
+
+        ${mejorHora ? `
+        <!-- Stats secundarias -->
+        <div class="dash-highlight-row">
+          <div class="dash-kpi" style="margin:0">
+            <div class="dash-kpi-icon">⏰</div>
+            <div class="dash-kpi-label">Mejor hora</div>
+            <div class="dash-kpi-value">${mejorHora[0]}:00hs</div>
+            <div class="dash-kpi-sub">${fmt(mejorHora[1])} facturado</div>
+          </div>
+          <div class="dash-kpi" style="margin:0">
+            <div class="dash-kpi-icon">📊</div>
+            <div class="dash-kpi-label">Unid. por venta</div>
+            <div class="dash-kpi-value">${totalTxns > 0 ? (totalUnidades / totalTxns).toFixed(1) : "—"}</div>
+            <div class="dash-kpi-sub">promedio</div>
+          </div>
+          ${ranking.length > 0 ? `
+          <div class="dash-kpi" style="margin:0">
+            <div class="dash-kpi-icon">🥇</div>
+            <div class="dash-kpi-label">Top producto</div>
+            <div class="dash-kpi-value" style="font-size:.85rem;color:var(--text)">${ranking[0].nombre.length > 18 ? ranking[0].nombre.slice(0,18)+"…" : ranking[0].nombre}</div>
+            <div class="dash-kpi-sub">${fmt(ranking[0].total)}</div>
+          </div>` : ""}
+        </div>
+        ` : ""}
+
+        ${filtered.length === 0 ? `
+          <div style="text-align:center;padding:48px 20px;color:var(--muted);font-size:.82rem;letter-spacing:2px;background:white;border:1.5px solid var(--border);border-radius:12px">
+            SIN TRANSACCIONES EN ESTE PERÍODO
+          </div>
+        ` : `
+
+        <!-- Evolución de ventas (barras por día) -->
+        ${dayEntries.length > 1 ? `
+        <div class="dash-section-header">
+          <div class="dash-section-title">📈 Evolución de ventas</div>
+          <div class="dash-section-badge">${dayEntries.length} días</div>
+        </div>
+        <div class="dash-chart">
+          <div class="dash-chart-title">Facturación diaria</div>
+          <div class="dash-bars">
+            ${dayEntries.map(d => {
+              const pct = Math.max(4, Math.round((d.total / maxBarVal) * 100));
+              return `<div class="dash-bar-col">
+                <div class="dash-bar-val">${d.total >= 1000 ? (d.total/1000).toFixed(0)+'k' : d.total}</div>
+                <div style="flex:1;display:flex;align-items:flex-end;width:100%">
+                  <div class="dash-bar-body" style="height:${pct}%"></div>
+                </div>
+                <div class="dash-bar-label">${d.label}</div>
+              </div>`;
+            }).join("")}
+          </div>
+        </div>
+        ` : ""}
+
+        <!-- Ranking por $$ -->
+        <div class="dash-section-header">
+          <div class="dash-section-title">🏆 Ranking por facturación</div>
+          <div class="dash-section-badge">Top ${ranking.length}</div>
+        </div>
+        <div class="dash-ranking">
+          ${ranking.map((r, i) => {
+            const posClass = i === 0 ? "gold" : i === 1 ? "silver" : i === 2 ? "bronze" : "";
+            const medal = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : (i + 1);
+            const pct = Math.round((r.total / maxTotal) * 100);
+            return `<div class="dash-rank-row" style="animation-delay:${i * 0.04}s">
+              <div class="dash-rank-pos ${posClass}">${medal}</div>
+              <div class="dash-rank-bar-wrap">
+                <div class="dash-rank-name">${r.nombre}</div>
+                <div class="dash-rank-bar-bg">
+                  <div class="dash-rank-bar-fill" style="width:${pct}%"></div>
+                </div>
+              </div>
+              <div class="dash-rank-stats">
+                <div class="dash-rank-total">${fmt(r.total)}</div>
+                <div class="dash-rank-units">${fmtNum(r.unidades)} unid. · ${r.txns} op.</div>
+              </div>
+            </div>`;
+          }).join("")}
+        </div>
+
+        <!-- Ranking por unidades -->
+        <div class="dash-section-header">
+          <div class="dash-section-title">📦 Más vendidos por unidades</div>
+          <div class="dash-section-badge">Top ${rankUnid.length}</div>
+        </div>
+        <div class="dash-ranking">
+          ${rankUnid.map((r, i) => {
+            const maxU = rankUnid[0].unidades || 1;
+            const pct = Math.round((r.unidades / maxU) * 100);
+            const posClass = i === 0 ? "gold" : i === 1 ? "silver" : i === 2 ? "bronze" : "";
+            return `<div class="dash-rank-row" style="animation-delay:${i * 0.04}s">
+              <div class="dash-rank-pos ${posClass}">${i + 1}</div>
+              <div class="dash-rank-bar-wrap">
+                <div class="dash-rank-name">${r.nombre}</div>
+                <div class="dash-rank-bar-bg">
+                  <div class="dash-rank-bar-fill" style="width:${pct}%;background:var(--accent2)"></div>
+                </div>
+              </div>
+              <div class="dash-rank-stats">
+                <div class="dash-rank-total" style="color:var(--accent2)">${fmtNum(r.unidades)} uds.</div>
+                <div class="dash-rank-units">${fmt(r.total)}</div>
+              </div>
+            </div>`;
+          }).join("")}
+        </div>
+
+        <!-- Métodos de pago -->
+        ${metodos.length > 0 ? `
+        <div class="dash-section-header">
+          <div class="dash-section-title">💳 Métodos de pago</div>
+        </div>
+        <div class="dash-metodos-grid">
+          ${metodos.map(([m, v]) => {
+            const pct = totalFacturado > 0 ? ((v.total / totalFacturado) * 100).toFixed(0) : 0;
+            return `<div class="dash-metodo-card">
+              <div class="dash-metodo-icon">${metIcons[m] || "💰"}</div>
+              <div class="dash-metodo-name">${m}</div>
+              <div class="dash-metodo-val">${fmt(v.total)}</div>
+              <div class="dash-metodo-pct">${pct}% · ${v.count} op.</div>
+            </div>`;
+          }).join("")}
+        </div>
+        ` : ""}
+
+        <!-- Por empresa -->
+        ${empresas.length > 1 ? `
+        <div class="dash-section-header">
+          <div class="dash-section-title">🏢 Por empresa / país</div>
+        </div>
+        <div class="dash-ranking">
+          ${empresas.map(([ e, v ], i) => {
+            const pct = Math.round((v.total / (empresas[0][1].total || 1)) * 100);
+            return `<div class="dash-rank-row" style="animation-delay:${i * 0.04}s">
+              <div class="dash-rank-pos">${i + 1}</div>
+              <div class="dash-rank-bar-wrap">
+                <div class="dash-rank-name">${e}</div>
+                <div class="dash-rank-bar-bg">
+                  <div class="dash-rank-bar-fill" style="width:${pct}%;background:var(--warn)"></div>
+                </div>
+              </div>
+              <div class="dash-rank-stats">
+                <div class="dash-rank-total" style="color:var(--warn)">${fmt(v.total)}</div>
+                <div class="dash-rank-units">${v.txns} operaciones</div>
+              </div>
+            </div>`;
+          }).join("")}
+        </div>
+        ` : ""}
+
+        <!-- Vendedores -->
+        ${usuarios.length > 0 ? `
+        <div class="dash-section-header">
+          <div class="dash-section-title">👤 Ranking vendedores</div>
+          <div class="dash-section-badge">${usuarios.length} activos</div>
+        </div>
+        <div class="dash-ranking">
+          ${usuarios.map(([ u, v ], i) => {
+            const initials = u.slice(0,2).toUpperCase();
+            return `<div class="dash-user-row" style="animation-delay:${i*0.03}s">
+              <div class="dash-user-avatar">${initials}</div>
+              <div class="dash-user-name">${u}</div>
+              <div style="text-align:right">
+                <div class="dash-user-total">${fmt(v.total)}</div>
+                <div class="dash-user-txns">${v.txns} operaciones</div>
+              </div>
+            </div>`;
+          }).join("")}
+        </div>
+        ` : ""}
+
+        <!-- Por dispositivo -->
+        ${devices.length > 0 ? `
+        <div class="dash-section-header">
+          <div class="dash-section-title">📱 Por dispositivo</div>
+        </div>
+        <div class="dash-devices">
+          ${devices.map(([d, total]) => `
+            <div class="dash-device-badge">
+              <div class="dash-device-icon">${devIcons[d] || "💻"}</div>
+              <div>
+                <div class="dash-device-name">${d}</div>
+                <div class="dash-device-val">${fmt(total)}</div>
+              </div>
+            </div>
+          `).join("")}
+        </div>
+        ` : ""}
+
+        `}
+
+        <div style="height:20px"></div>
+      `;
+    }
+
+    // ══════════════ SCANNER QR / CÓDIGO DE BARRAS ══════════════
+    let scannerStream = null;
+    let scannerAnimFrame = null;
+    let scannerActive = false;
+    let lastScanCode = null;
+    let lastScanTime = 0;
+
+    async function abrirScanner() {
+      const overlay = document.getElementById("scanner-overlay");
+      const video   = document.getElementById("scanner-video");
+      const result  = document.getElementById("scanner-result");
+
+      overlay.classList.add("show");
+      scannerActive = true;
+      result.textContent = "Iniciando cámara…";
+
+      try {
+        scannerStream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } }
+        });
+        video.srcObject = scannerStream;
+        await video.play();
+        result.textContent = "Apuntá al código del producto 📦";
+        iniciarDeteccion(video, result);
+      } catch (err) {
+        if (err.name === "NotAllowedError") {
+          result.textContent = "⚠️ Permiso de cámara denegado. Habilitalo en la configuración del navegador.";
+        } else {
+          result.textContent = "⚠️ No se pudo acceder a la cámara: " + err.message;
+        }
+      }
+    }
+
+    function cerrarScanner() {
+      scannerActive = false;
+      if (scannerAnimFrame) cancelAnimationFrame(scannerAnimFrame);
+      if (scannerStream) {
+        scannerStream.getTracks().forEach(t => t.stop());
+        scannerStream = null;
+      }
+      const video = document.getElementById("scanner-video");
+      video.srcObject = null;
+      document.getElementById("scanner-overlay").classList.remove("show");
+      lastScanCode = null;
+    }
+
+    function iniciarDeteccion(video, resultEl) {
+      // Preferimos BarcodeDetector API (Chrome Android, Chrome Desktop)
+      if ("BarcodeDetector" in window) {
+        const detector = new BarcodeDetector({
+          formats: ["ean_13", "ean_8", "code_128", "code_39", "qr_code", "upc_a", "upc_e", "itf", "data_matrix"]
+        });
+        const scanLoop = async () => {
+          if (!scannerActive) return;
+          if (video.readyState === video.HAVE_ENOUGH_DATA) {
+            try {
+              const barcodes = await detector.detect(video);
+              if (barcodes.length > 0) {
+                const code = barcodes[0].rawValue;
+                const now  = Date.now();
+                if (code !== lastScanCode || now - lastScanTime > 3000) {
+                  lastScanCode = code;
+                  lastScanTime = now;
+                  onCodigoDetectado(code, resultEl);
+                }
+              }
+            } catch (_) {}
+          }
+          scannerAnimFrame = requestAnimationFrame(scanLoop);
+        };
+        scanLoop();
+      } else {
+        // Fallback: canvas + ZXing via CDN (carga lazy)
+        resultEl.textContent = "Cargando módulo de escaneo…";
+        const script = document.createElement("script");
+        script.src = "https://unpkg.com/@zxing/browser@latest/umd/index.min.js";
+        script.onload = () => {
+          resultEl.textContent = "Apuntá al código del producto 📦";
+          const codeReader = new ZXingBrowser.BrowserMultiFormatReader();
+          codeReader.decodeFromVideoElement(video, (result, err) => {
+            if (!scannerActive) return;
+            if (result) {
+              const code = result.getText();
+              const now  = Date.now();
+              if (code !== lastScanCode || now - lastScanTime > 3000) {
+                lastScanCode = code;
+                lastScanTime = now;
+                onCodigoDetectado(code, resultEl);
+              }
+            }
+          });
+        };
+        script.onerror = () => {
+          resultEl.textContent = "⚠️ Tu navegador no soporta escaneo automático. Escribí el código manualmente.";
+        };
+        document.head.appendChild(script);
+      }
+    }
+
+    function onCodigoDetectado(codigo, resultEl) {
+      // Vibrar si está disponible (feedback háptico)
+      if ("vibrate" in navigator) navigator.vibrate([50, 30, 50]);
+
+      resultEl.innerHTML = `<span style="color:#1aac5e;font-weight:700">✓ ${codigo}</span> — Buscando...`;
+
+      // Buscar producto por código de barra
+      const match = allProductos.find(p =>
+        p.codigoBarraProductos && p.codigoBarraProductos.toString().trim() === codigo.trim()
+      );
+
+      if (match) {
+        // Agregar al carrito directamente
+        agregarAlCarrito(match.idProductos);
+        resultEl.innerHTML = `<span style="color:#1aac5e;font-weight:700">✅ ${match.nameProductos}</span> agregado al ticket`;
+
+        // Cerrar scanner después de 1.5s
+        setTimeout(() => {
+          cerrarScanner();
+        }, 1500);
+      } else {
+        // No encontrado: poner el código en el buscador para búsqueda manual
+        resultEl.innerHTML = `<span style="color:var(--warn);font-weight:700">⚠️ Código ${codigo}</span> — No encontrado. Buscando por nombre…`;
+        cerrarScanner();
+        const searchInput = document.getElementById("caja-search");
+        if (searchInput) {
+          searchInput.value = codigo;
+          searchInput.dispatchEvent(new Event("input"));
+          searchInput.focus();
+        }
+      }
+    }
+
+    // Cerrar scanner con tap fuera
+    document.getElementById("scanner-overlay").addEventListener("click", function(e) {
+      if (e.target === this) cerrarScanner();
+    });
+
+    // Cerrar con Escape
+    document.addEventListener("keydown", e => {
+      if (e.key === "Escape" && scannerActive) cerrarScanner();
+    });
 
   </script>
 </body>
